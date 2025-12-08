@@ -9,10 +9,10 @@
 - `feature/...`: new features
 
 ### Example:
-- feature-mri-feature-extractor
-- feature-ct-feature-extractor
-- feature-fusion-engineer
-- feature-classification-engineer
+- head-detection
+- ct-tumor-detection
+- mri-tumor-detection
+- tumor-segmentation
 
 ## 📝 Commit Message Convention
 
