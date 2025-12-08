@@ -10,6 +10,7 @@ __pycache__/
 # Data (DON'T UPLOAD RAW DATA)
 data/raw/
 data/interim/
+data/processed/
 
 # Models
 models/*.pkl
