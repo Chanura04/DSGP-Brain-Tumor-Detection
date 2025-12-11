@@ -32,11 +32,11 @@ DSGP-Brain-Tumor_Detection
 ├── results
 ├── scripts
 ├── src
-│   ├── data.java
-│   ├── features.java
-│   ├── models.java
-│   ├── utils.java
-│   └── visualization.java
+│   ├── data.py
+│   ├── features.py
+│   ├── models.py
+│   ├── utils.py
+│   └── visualization.py
 ├── tests
 ├── .gitignore
 ├── CONTRIBUTING.md
