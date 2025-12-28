@@ -1,4 +1,4 @@
-# Project Name: Brain Tumor Detection and Classification System
+# Project Name: Brain Tumor Detection and Segmentation System
 
 ## 👥 Team Members
 - Member 1 – Head detection
@@ -9,7 +9,7 @@
 ---
 
 ## 📌 Project Overview
-This project aims to build a machine learning model that predicts customer churn using demographic, usage, and contract data. We follow best practices in reproducible data science with a modular codebase, automated testing, and experiment tracking.
+This project aims to build a machine learning model that predict Brain Tumors and Segment the tumor. We follow best practices in reproducible data science with a modular codebase, automated testing, and experiment tracking.
 
 ---
 
