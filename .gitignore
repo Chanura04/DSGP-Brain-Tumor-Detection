@@ -8,9 +8,9 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Data (DON'T UPLOAD RAW DATA)
-data/raw/
-data/interim/
-data/processed/
+# data/raw/
+# data/interim/
+# data/processed/
 
 # Models
 models/*.pkl
