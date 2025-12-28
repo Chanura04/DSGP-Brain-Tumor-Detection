@@ -53,7 +53,7 @@ DSGP-Brain-Tumor_Detection
 ### 1. Clone the repo
 
 - git clone https://github.com/Chanura04/DSGP-Brain-Tumor-Detection.git
-- cd DSGP-Brain-Tumor_Detection
+- cd DSGP-Brain-Tumor-Detection
 
 ### 2. Install dependencies
 
