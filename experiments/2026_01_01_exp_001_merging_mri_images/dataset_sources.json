@@ -1,0 +1,8 @@
+{
+  "datasets": [
+    {
+      "name": "Brain Tumor MRI Dataset",
+      "classes_used": ["glioma", "meningioma", "pituitary", "no_tumor"]
+    }
+  ]
+}

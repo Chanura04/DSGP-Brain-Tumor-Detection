@@ -1,0 +1,26 @@
+{
+    "experiment_name": "merging_mri_images",
+    "dataset_name": "Brain Tumor MRI Merged Dataset (not final)",
+    "version": "1.0",
+    "status": "not_final",
+    "created_by": "Inzaman Careem",
+    "date_created": "2025-12-29",
+    "image_type": "MRI",
+    "format": ["PNG", "JPG", "JPEG"],
+    "classes": ["glioma", "meningioma", "pituitary", "no_tumor"],
+    "preprocessing": "Merged multiple MRI datasets into 4 unified classes",
+    "total_images": 30598,
+    "image_counts": {
+        "glioma": 10209,
+        "meningioma": 10346,
+        "no_tumor": 1840,
+        "pituitary": 8203
+    },
+    "percentages": {
+        "glioma": 33.36,
+        "meningioma": 33.81,
+        "no_tumor": 6.01,
+        "pituitary": 26.81
+    },
+    "notes": "Merged dataset for early experiments; subject to change."
+}
