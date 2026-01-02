@@ -2,7 +2,8 @@
   "datasets": [
     {
       "name": "Brain Tumor MRI Dataset",
-      "classes_used": ["glioma", "meningioma", "pituitary", "no_tumor"]
+      "classes_used": ["glioma", "meningioma", "pituitary", "no_tumor"],
+      "dataset_link": "https://drive.google.com/drive/folders/1m4nXKqwz0nWX_ppsIfmBy5iUzAyuSYxo?usp=sharing"
     }
   ]
 }
