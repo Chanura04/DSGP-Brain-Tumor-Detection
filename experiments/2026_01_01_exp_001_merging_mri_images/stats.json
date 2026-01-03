@@ -1,0 +1,32 @@
+{
+    "before_merge": {
+        "total_images": 30598,
+        "folders": 19,
+        "note": "Images reorganized only; no removals"        
+    },
+    "after_merge": {
+        "total_images": 30598,
+        "folders": 4
+    },
+
+    "imbalance_metrics": {
+        "max_class": "meningioma",
+        "min_class": "no_tumor",
+        "imbalance_ratio": 5.62
+    },
+
+    "data_quality": {
+        "duplicates_removed": false,
+        "corrupted_images_removed": false,
+        "corrupted_images_count": 0,
+        "non_image_files_removed": false
+    },
+
+    "image_properties": {
+        "color_mode": "grayscale",
+        "min_resolution": "224x224",
+        "max_resolution": "512x512",
+        "resized": false,
+        "normalized": false
+    }
+}
