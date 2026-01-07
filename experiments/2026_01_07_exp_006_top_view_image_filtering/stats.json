@@ -1,0 +1,59 @@
+{
+    "mri_dataset": {
+        "before_filtering": {
+            "total_images": 24870,
+            "folders": 4       
+        },
+        "after_filtering": {
+            "total_images": 6205,
+            "folders": 4
+        },
+        "imbalance_metrics": {
+            "definition": "max_class_count / min_class_count",
+            "max_class": "glioma",
+            "min_class": "pituitary",
+            "imbalance_ratio": 1.81
+        },
+        "data_quality": {
+            "only_top_view_images": true
+        },
+        "image_properties": {
+            "model_input_channels": 3,
+            "grayscale_expansion": "duplicated across RGB channels",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": true,
+            "normalized": true
+        },
+        "filtering_method": "high-confidence top-view selection (ResNet18, p>=0.99)"
+    },
+
+    "ct_dataset":{
+        "before_filtering": {
+            "total_images": 4612,
+            "folders": 2       
+        },
+        "after_filtering": {
+            "total_images": 3309,
+            "folders": 2
+        },
+        "imbalance_metrics": {
+            "definition": "max_class_count / min_class_count",
+            "max_class": "tumor",
+            "min_class": "normal",
+            "imbalance_ratio": 1.05
+        },
+        "data_quality": {
+            "only_top_view_images": true
+        },
+        "image_properties": {
+            "model_input_channels": 3,
+            "grayscale_expansion": "duplicated across RGB channels",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": true,
+            "normalized": true
+        },
+        "filtering_method": "high-confidence top-view selection (ResNet18, p>=0.98)"
+    }
+}
