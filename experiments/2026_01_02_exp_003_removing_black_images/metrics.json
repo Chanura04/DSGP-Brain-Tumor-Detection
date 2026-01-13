@@ -1,0 +1,43 @@
+{
+    "experiment_name": "removing_black_images",
+    "dataset_name": "Brain Tumor MRI and CT Dataset (not final)",
+    "version": "1.2",
+    "status": "not_final",
+    "created_by": "Inzaman Careem",
+    "date_created": "2026-01-01",
+    "image_type": ["MRI", "CT"],
+    "format": ["png", "jpg", "jpeg"],
+    "classes": {
+        "mri": ["glioma", "meningioma", "pituitary", "no_tumor"],
+        "ct": ["normal", "tumor"]
+    },
+    "preprocessing": "Removed low intensity images from 4 unified MRI classes and 2 unified CT classes",
+    "mri_images": {
+        "total_images": 24870,
+        "image_counts": {
+            "glioma": 7700,
+            "meningioma": 8830,
+            "no_tumor": 1819,
+            "pituitary": 6521
+        },
+        "percentages": {
+            "glioma": 30.96,
+            "meningioma": 35.50,
+            "no_tumor": 7.31,
+            "pituitary": 26.22
+        }
+    },
+
+    "ct_images": {
+        "total_images": 4612,
+        "image_counts": {
+            "normal": 2287,
+            "tumor": 2325
+        },
+        "percentages": {
+            "normal": 49.59,
+            "tumor": 50.41
+        }
+    },
+    "notes": "Removed low intensity images for early experiments; subject to change."
+}

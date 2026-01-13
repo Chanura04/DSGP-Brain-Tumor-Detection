@@ -1,0 +1,9 @@
+{
+  "datasets": [
+    {
+      "name": "Brain Tumor Segemntation Dataset",
+      "classes_used": ["images", "mask"],
+      "dataset_link": "https://drive.google.com/drive/folders/1y8ziBYK_l7hXcZ5heGItZztZy77s_b62?usp=sharing"
+    }
+  ]
+}

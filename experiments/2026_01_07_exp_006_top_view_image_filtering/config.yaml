@@ -1,0 +1,7 @@
+batch_size: 8
+image_size: 224
+learning_rate: 0.0001
+model: resnet18
+num_epochs: 5
+optimizer: Adam
+pretrained: true
