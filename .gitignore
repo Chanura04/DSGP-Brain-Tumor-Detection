@@ -25,5 +25,9 @@ models/*.joblib
 # MacOS files
 .DS_Store
 
-# VSCode
+# IDEs
 .vscode/
+.idea/
+
+# Tests
+.pytest_cache/
