@@ -1,4 +1,4 @@
-# Project Name: Brain Tumor Detection and Classification System
+# Project Name: Brain Tumor Detection and Segmentation System
 
 ## 👥 Team Members
 - Member 1 – Head detection
@@ -9,7 +9,7 @@
 ---
 
 ## 📌 Project Overview
-This project aims to build a machine learning model that predicts customer churn using demographic, usage, and contract data. We follow best practices in reproducible data science with a modular codebase, automated testing, and experiment tracking.
+This project aims to build a machine learning model that predict Brain Tumors and Segment the tumor. We follow best practices in reproducible data science with a modular codebase, automated testing, and experiment tracking.
 
 ---
 
@@ -19,9 +19,9 @@ This project aims to build a machine learning model that predicts customer churn
 DSGP-Brain-Tumor_Detection
 ├── configs
 ├── data
+│   ├── raw/
 │   ├── interim/
-│   ├── processed/
-│   └── raw
+│   └── processed/
 ├── docs
 ├── experiments
 ├── models
@@ -32,18 +32,21 @@ DSGP-Brain-Tumor_Detection
 ├── results
 ├── scripts
 ├── src
-│   ├── data.java
-│   ├── features.java
-│   ├── models.java
-│   ├── utils.java
-│   └── visualization.java
+│   ├── data/
+│   │   └── organize.py
+│   └── utils/
+│       └── utils_config.py
 ├── tests
+│   └── test_organize.py
 ├── .gitignore
+├── .python-version
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile
+├── pyproject.toml
 ├── README.md
-└── requirements.txt
+├── setup.cfg
+└── uv.lock
 ```
 
 ---
@@ -52,11 +55,12 @@ DSGP-Brain-Tumor_Detection
 
 ### 1. Clone the repo
 
-- git clone https://github.com/Chanura04/DSGP-Brain-Tumor_Detection.git
-- cd DSGP-Brain-Tumor_Detection
+- git clone https://github.com/Chanura04/DSGP-Brain-Tumor-Detection.git
+- cd DSGP-Brain-Tumor-Detection
 
 ### 2. Install dependencies
 
+- poetry export -f requirements.txt --output requirements.txt
 - pip install -r requirements.txt
 
 ### 3. Run the pipeline
