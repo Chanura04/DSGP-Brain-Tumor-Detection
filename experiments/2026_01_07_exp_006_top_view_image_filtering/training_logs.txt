@@ -1,0 +1,10 @@
+2026-01-07 13:37:57,464 | INFO | ===== TRAINING STARTED =====
+2026-01-07 13:37:57,468 | INFO | Dataset: /content/drive/MyDrive/Colab Notebooks/Data Science Group Project/data/labeled_images
+2026-01-07 13:37:57,471 | INFO | Epochs: 5, Batch size: 8
+2026-01-07 13:38:31,213 | INFO | Epoch 1/5, Loss: 0.0413
+2026-01-07 13:39:00,561 | INFO | Epoch 2/5, Loss: 0.0335
+2026-01-07 13:39:29,295 | INFO | Epoch 3/5, Loss: 0.0267
+2026-01-07 13:39:58,180 | INFO | Epoch 4/5, Loss: 0.0331
+2026-01-07 13:40:26,812 | INFO | Epoch 5/5, Loss: 0.0243
+2026-01-07 13:40:26,932 | INFO | Model saved to /content/drive/MyDrive/Colab Notebooks/Data Science Group Project/experiments/2026_01_07_19_07_57/model.pth
+2026-01-07 13:40:26,933 | INFO | ===== TRAINING FINISHED =====
