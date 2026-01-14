@@ -1,11 +1,7 @@
-import sys
 from pathlib import Path
 import pytest
 
-# Add src folder to Python path so Python can see medimgprep and utils
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from data.organize import MoveImages
+from data.organizer import MoveImages
 
 
 @pytest.fixture
@@ -17,7 +13,7 @@ def mover():
         lookfor=["class1", "class2"],
         out="original",
         include=True,
-        dry_run=True
+        dry_run=True,
     )
 
 
@@ -61,8 +57,10 @@ def test_do_all_processes_runs_without_error(mover, tmp_path, monkeypatch):
     """Run do_all_processes without touching real files."""
     # Patch methods that do real file operations
     monkeypatch.setattr(MoveImages, "get_specific_paths", lambda self, word: [tmp_path])
-    monkeypatch.setattr(MoveImages, "copy_unique_files", lambda self, src, dest, word: None)
-    monkeypatch.setattr(MoveImages, "make_merged_directory", lambda self, name: tmp_path / "merged")
+    monkeypatch.setattr(MoveImages, "copy_files", lambda self, src, dest, word: None)
+    monkeypatch.setattr(
+        MoveImages, "make_merged_directory", lambda self, name: tmp_path / "merged"
+    )
 
     # This should run without raising exceptions
-    mover.do_all_processes()
+    mover.build_interim_dataset()
