@@ -42,7 +42,7 @@ class ImageSeperator(ABC):
         no_black_folder.mkdir(parents=True, exist_ok=True)
         return no_black_folder
 
-    @log_calls(logger)
+    @log_calls
     @get_time
     @abstractmethod
     def process_images(self):

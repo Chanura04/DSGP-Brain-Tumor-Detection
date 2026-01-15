@@ -62,18 +62,15 @@ def get_time(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-def log_calls(logger):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)
-            try:
-                result = func(*args, **kwargs)
-                logger.info("Returning %s: result=%r", func.__name__, result)
-                return result
-            except Exception:
-                logger.exception("Stopped %s: failed", func.__name__)
+def log_calls(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)
+        try:
+            result = func(*args, **kwargs)
+            logger.info("Returning %s: result=%r", func.__name__, result)
+            return result
+        except Exception:
+            logger.exception("Stopped %s: failed", func.__name__)
 
-        return wrapper
-
-    return decorator
+    return wrapper

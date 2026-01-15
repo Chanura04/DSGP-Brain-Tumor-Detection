@@ -117,7 +117,7 @@ class MoveImages:
         """
         return f"Moving Images from {self.raw_dataset_path} to {self.interim_dataset_path} (dry_run={self.dry_run})"
 
-    @log_calls(logger)
+    @log_calls
     def get_specific_paths(self, word: str) -> Generator[Path, None, None]:
         """
         Yield paths to directories in the raw dataset based on the `include` flag.
@@ -139,7 +139,7 @@ class MoveImages:
             if path.is_dir() and (self.include or word_lower in path.name.lower()):
                 yield path
 
-    @log_calls(logger)
+    @log_calls
     def make_merged_directory(self, name: Path) -> Path:
         """
         Create the merged directory in the interim dataset.
@@ -152,7 +152,7 @@ class MoveImages:
         return merged_folder
 
     @deprecated("Use copy_files for faster concurent tasks")
-    @log_calls(logger)
+    @log_calls
     @get_time
     def copy_unique_files(self, src_folder: Path, dest_folder: Path, word: str) -> None:
         """
@@ -281,7 +281,7 @@ class MoveImages:
             skipped_count,
         )
 
-    @log_calls(logger)
+    @log_calls
     @get_time
     def build_interim_dataset(self) -> None:
         """
