@@ -12,8 +12,9 @@ Functions:
 """
 
 import logging
+from typing import Final
 
-LOG_FORMAT: str = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+LOG_FORMAT: Final[str] = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
 
 def setup_logging() -> None:

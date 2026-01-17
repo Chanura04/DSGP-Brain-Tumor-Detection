@@ -226,7 +226,7 @@ class MoveImages:
         :param iterable: image list to make batches
         :param n: number of images in a batch
         """
-        batch_list = []
+        batch_list: List[Path] = []
         for item in iterable:
             batch_list.append(item)
             if len(batch_list) == n:
@@ -247,7 +247,7 @@ class MoveImages:
         copied_count: int = 0
         skipped_count: int = 0
         processed = 0
-        images = [
+        images: List[Path] = [
             image
             for image in src_folder.glob("*")
             if image.is_file() and image.suffix.lower() in VALID_IMAGE_EXTENSIONS

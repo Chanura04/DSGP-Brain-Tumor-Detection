@@ -1,51 +1,106 @@
 from pathlib import Path
+from typing import List
+from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 import shutil
+import logging
 
-from data.base_image_separator import ImageSeperator
-from utils.utils_config import VALID_IMAGE_EXTENSIONS
+from data.base_image_separator import ImageSeparator
+from data.config import MAX_WORKERS, BATCH_SIZE
+
+logger = logging.getLogger(__name__)
 
 
-class SegmentationImageSeperator(ImageSeperator):
-    def __init__(self, dataset_path, lookfor, out):
+class SegmentationImageSeparator(ImageSeparator):
+    def __init__(
+        self, dataset_path: str, lookfor: str, out: str, source: str, apply_to: str
+    ):
         super().__init__(dataset_path, lookfor, out)
-        self.valid_extension = VALID_IMAGE_EXTENSIONS[1]
+        self.source = Path(source)
+        self.apply_to = Path(apply_to)
 
-    def process_images(self, source, apply_to):
-        source_path = Path(self.dataset_path) / source / self.source_word
+    def process_images(self, source: str, apply_to: str) -> None:
+        raise NotImplementedError("Use filter_low_intensity_images instead")
 
-        if not source_path.exists():
-            print(f"Skipping (no '{self.source_word}' folder): {source_path}")
+    @staticmethod
+    def _process_pair_images(
+        img: Path, img_mask: Path, dest: Path, dest_mask: Path
+    ) -> bool:
+        if img_mask.exists():
+            try:
+                if ImageSeparator.is_mostly_black(img):
+                    return True  # removed
 
-        out_folder = self.make_directory(Path(source))
+                shutil.copy2(img, dest)
+                shutil.copy2(img_mask, dest_mask)
+                return False  # copied
 
-        if source_path.resolve() == Path(out_folder).resolve():
-            print("Source and destination are the same, skipping")
+            except Exception:
+                logger.exception("File processing failed")
+                return True
+        
+        logger.warning("Missing mask for %s", img)
+        return True
 
-        apply_path = Path(self.dataset_path) / apply_to / self.source_word
-        out_apply_to = self.make_directory(Path(apply_to))
+    def filter_low_intensity_images(self) -> None:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
-        print(f"Processing from: {source_path}")
-        print(f"Applying to: {apply_path}")
-        print(f"Outputting to: {out_folder}")
-        print(f"Outputting to: {out_apply_to}")
+            source_path: Path = self.dataset_path / self.source / self.source_word
 
-        # Process all images in source folder
-        count_total = 0
-        count_removed = 0
-        for image in source_path.glob("*.jpg"):
-            count_total += 1
+            if not source_path.exists():
+                logger.debug(
+                    "Skipping (no '%s' folder): %s", self.source_word, source_path
+                )
 
-            mask = apply_path / image.name.replace(".jpg", "_m.jpg")
-            if not mask.exists():
-                continue  # skip broken pairs
+            out_folder: Path = self.make_directory(self.source)
 
-            if SegmentationImageSeperator.is_mostly_black(image):
-                count_removed += 1
-                continue
+            if source_path.resolve() == out_folder.resolve():
+                logger.debug("Source and destination are the same, skipping")
 
-            shutil.copy2(image, out_folder / image.name)
-            shutil.copy2(mask, out_apply_to / mask.name)
+            apply_path: Path = self.dataset_path / self.apply_to / self.source_word
+            out_apply_to: Path = self.make_directory(self.apply_to)
 
-        print(
-            f"Processed {count_total} images, removed {count_removed} mostly black images."
-        )
+            logger.info("Processing from: %s", source_path)
+            logger.info("Applying to: %s", apply_path)
+            logger.info("Outputting to: %s", out_folder)
+            logger.info("Outputting to: %s", out_apply_to)
+
+            # Process all images in source folder
+            processed: int = 0
+            copied_count: int = 0
+            removed_count: int = 0
+            images: List[Path] = [
+                image for image in source_path.glob("*.jpg") if image.is_file()
+            ]
+
+            for batches in ImageSeparator.batch(images, BATCH_SIZE):
+                futures: List[Future[bool]] = [
+                    executor.submit(
+                        SegmentationImageSeparator._process_pair_images,
+                        img,
+                        apply_path / img.name.replace(".jpg", "_m.jpg"),
+                        out_folder / img.name,
+                        out_apply_to / img.name.replace(".jpg", "_m.jpg"),
+                    )
+                    for img in batches
+                ]
+                for future in as_completed(futures):
+                    processed += 1
+                    if future.result():
+                        removed_count += 1
+                    else:
+                        copied_count += 1
+
+                    # Log progress every 50 files
+                    if processed % 50 == 0:
+                        logger.info(
+                            "Processed %d files so far in folder %s",
+                            processed,
+                            source_path,
+                        )
+
+            logger.info(
+                "Look at '%s': copied %d images, removed %d mostly black images",
+                self.source_word,
+                copied_count,
+                removed_count,
+            )
