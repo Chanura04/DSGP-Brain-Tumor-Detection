@@ -64,7 +64,7 @@ def get_time(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-def log_calls(func: Callable[P, R]) -> Callable[P, R]:
+def log_action(func: Callable[P, R]) -> Callable[P, R]:
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import final, Optional, cast, Generator, List
 from numpy.typing import NDArray
 
-from utils.decorators import get_time, log_calls, deprecated
+from utils.decorators import get_time, log_action, deprecated
 
 from data.config import (
     MEAN_THRESHOLD,
@@ -71,14 +71,14 @@ class ImageSeparator(ABC):
         # Mostly black if mean very low OR almost all pixels are dark
         return mean_intensity < mean_thresh or ratio < bright_pixel_ratio
 
-    @log_calls
+    @log_action
     def make_directory(self, name: Path) -> Path:
         no_black_folder: Path = name / self.out
         no_black_folder.mkdir(parents=True, exist_ok=True)
         return no_black_folder
 
     @deprecated("Use filter_low_intensity_images instead")
-    @log_calls
+    @log_action
     @get_time
     @abstractmethod
     def process_images(self) -> None:
