@@ -22,3 +22,8 @@ BATCH_SIZE: Final[int] = 1000
 MEAN_THRESHOLD: Final[int] = 10
 BRIGHT_PIXEL_RATIO: Final[float] = 0.2
 MAX_BRIGHTNESS: Final[int] = 50
+
+DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME: Final[str] = "original"
+DEFAULT_SEPARATOR_OUTPUT_DIR_NAME: Final[str] = "no_black"
+DEFAULT_SEPARATOR_SOURCE_DIR_NAME: Final[str] = "images"
+DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME: Final[str] = "mask"

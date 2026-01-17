@@ -5,14 +5,25 @@ import shutil
 import logging
 
 from data.base_image_separator import ImageSeparator
-from data.config import MAX_WORKERS, BATCH_SIZE
+from data.config import (
+    MAX_WORKERS,
+    BATCH_SIZE,
+    DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
+    DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
+)
+
 
 logger = logging.getLogger(__name__)
 
 
 class SegmentationImageSeparator(ImageSeparator):
     def __init__(
-        self, dataset_path: str, lookfor: str, out: str, source: str, apply_to: str
+        self,
+        dataset_path: str,
+        lookfor: str,
+        out: str,
+        source: str = DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
+        apply_to: str = DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
     ):
         super().__init__(dataset_path, lookfor, out)
         self.source = Path(source)
@@ -37,7 +48,7 @@ class SegmentationImageSeparator(ImageSeparator):
             except Exception:
                 logger.exception("File processing failed")
                 return True
-        
+
         logger.warning("Missing mask for %s", img)
         return True
 

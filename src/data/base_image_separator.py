@@ -7,12 +7,22 @@ from numpy.typing import NDArray
 
 from utils.decorators import get_time, log_calls, deprecated
 
-from data.config import MEAN_THRESHOLD, BRIGHT_PIXEL_RATIO, MAX_BRIGHTNESS
+from data.config import (
+    MEAN_THRESHOLD,
+    BRIGHT_PIXEL_RATIO,
+    MAX_BRIGHTNESS,
+    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+)
 
 
 class ImageSeparator(ABC):
     def __init__(
-        self, dataset_path: str, lookfor: str, out: str, dry_run: bool = False
+        self,
+        dataset_path: str,
+        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+        dry_run: bool = False,
     ):
         self.dataset_path: Path = Path(dataset_path)
         self.source_word: str = lookfor
