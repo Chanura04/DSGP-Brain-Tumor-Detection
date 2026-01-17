@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class ClassificationImageSeparator(ImageSeparator):
-    def __init__(self, dataset_path: str, lookfor: str, out: str):
-        super().__init__(dataset_path, lookfor, out)
+    def __init__(self, dataset_path: str, lookfor: str, out: str, dry_run: bool):
+        super().__init__(dataset_path, lookfor, out, dry_run)
 
         self.source_folders: List[Path] = [
             f for f in self.dataset_path.iterdir() if f.is_dir()

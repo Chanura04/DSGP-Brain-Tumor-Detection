@@ -22,10 +22,11 @@ class SegmentationImageSeparator(ImageSeparator):
         dataset_path: str,
         lookfor: str,
         out: str,
+        dry_run: bool,
         source: str = DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
         apply_to: str = DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
     ):
-        super().__init__(dataset_path, lookfor, out)
+        super().__init__(dataset_path, lookfor, out, dry_run)
         self.source = Path(source)
         self.apply_to = Path(apply_to)
 
