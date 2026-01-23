@@ -4,8 +4,6 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Ignore docs (for now)
-docs/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
