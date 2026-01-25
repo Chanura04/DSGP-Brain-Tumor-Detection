@@ -15,14 +15,16 @@ class Preprocessing:
 
   @staticmethod
   def denoise_img(img, **kwargs):
-    if img.dtype != np.uint8:
-          img_min, img_max = img.min(), img.max()
-          if img_max <= 1.0:
-              img = (img * 255).astype(np.uint8)
-          else:
-              img = img.astype(np.uint8)
+    # if img.dtype != np.uint8:
+    #       img_min, img_max = img.min(), img.max()
+    #       if img_max <= 1.0:
+    #           img = (img * 255).astype(np.uint8)
+    #       else:
+    #           img = img.astype(np.uint8)
 
-    return cv2.fastNlMeansDenoising(img, h=10)
+    # return cv2.fastNlMeansDenoising(img, h=10)
+
+    return cv2.medianBlur(img, ksize=3)
 
   @staticmethod
   def zscore_norm(img, **kwargs):
