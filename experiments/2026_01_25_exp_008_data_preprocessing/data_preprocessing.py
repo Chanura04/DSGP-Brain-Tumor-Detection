@@ -1,6 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import albumentations as A
+from albumentations.pytorch import ToTensorV2
 import numpy as np
 
 class Preprocessing:
@@ -38,7 +39,9 @@ class Preprocessing:
 
       A.HorizontalFlip(p=0.5),
 
-      A.Lambda(image=Preprocessing.zscore_norm, p=1.0)
+      A.Lambda(image=Preprocessing.zscore_norm, p=1.0),
+
+      ToTensorV2()
     ])
 
     return augment(image=img)["image"]
