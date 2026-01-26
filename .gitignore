@@ -32,3 +32,6 @@ models/*.joblib
 
 # Tests
 .pytest_cache/
+
+# Log Files
+logs/
