@@ -33,18 +33,23 @@ class SegmentationImageSeparator(ImageSeparator):
     def process_images(self, source: str, apply_to: str) -> None:
         raise NotImplementedError("Use filter_low_intensity_images instead")
 
-    @staticmethod
     def _process_pair_images(
-        img: Path, img_mask: Path, dest: Path, dest_mask: Path
+        self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
     ) -> bool:
         if img_mask.exists():
             try:
                 if ImageSeparator.is_mostly_black(img):
                     return True  # removed
 
-                shutil.copy2(img, dest)
-                shutil.copy2(img_mask, dest_mask)
-                return False  # copied
+                if self.dry_run:
+                    logger.info(
+                        "Copying %s to %s and %s to %s", img, dest, img_mask, dest_mask
+                    )
+                    return False
+                else:
+                    shutil.copy2(img, dest)
+                    shutil.copy2(img_mask, dest_mask)
+                    return False  # copied
 
             except Exception:
                 logger.exception("File processing failed")
@@ -87,7 +92,7 @@ class SegmentationImageSeparator(ImageSeparator):
             for batches in ImageSeparator.batch(images, BATCH_SIZE):
                 futures: List[Future[bool]] = [
                     executor.submit(
-                        SegmentationImageSeparator._process_pair_images,
+                        self._process_pair_images,
                         img,
                         apply_path / img.name.replace(".jpg", "_m.jpg"),
                         out_folder / img.name,

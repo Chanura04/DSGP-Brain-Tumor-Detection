@@ -14,21 +14,29 @@ logger = logging.getLogger(__name__)
 
 class ClassificationSplitter(BaseSplitter):
     def __init__(
-        self, interim_dataset_path: str, processed_dataset_path: str, lookfor: str
+        self,
+        interim_dataset_path: str,
+        processed_dataset_path: str,
+        lookfor: str,
+        dry_run: bool = False,
     ):
-        super().__init__(interim_dataset_path, processed_dataset_path, lookfor)
+        super().__init__(interim_dataset_path, processed_dataset_path, lookfor, dry_run)
 
     def copy_image(self, folder: Path, image) -> bool:
         dest = folder / image.name
         if dest.exists():
             return False
 
-        try:
-            shutil.copy2(image, folder)
+        if self.dry_run:
+            logger.info("Copying %s to %s", image, folder)
             return True
-        except Exception:
-            logger.exception("Failed to copy %s: %s", image, folder)
-            return False
+        else:
+            try:
+                shutil.copy2(image, folder)
+                return True
+            except Exception:
+                logger.exception("Failed to copy %s: %s", image, folder)
+                return False
 
     def split(
         self, train_ratio: float, val_ratio: float, seed: int = RANDOM_SEED

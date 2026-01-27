@@ -15,9 +15,13 @@ logger = logging.getLogger(__name__)
 
 class SegmentationSplitter(BaseSplitter):
     def __init__(
-        self, interim_dataset_path: str, processed_dataset_path: str, lookfor: str
+        self,
+        interim_dataset_path: str,
+        processed_dataset_path: str,
+        lookfor: str,
+        dry_run: bool = False,
     ):
-        super().__init__(interim_dataset_path, processed_dataset_path, lookfor)
+        super().__init__(interim_dataset_path, processed_dataset_path, lookfor, dry_run)
         self.base_name_image: str = "images"
         self.base_name_mask: str = "mask"
 
@@ -30,19 +34,29 @@ class SegmentationSplitter(BaseSplitter):
         if dest_images.exists() and dest_masks.exists():
             return False
 
-        try:
-            shutil.copy2(image, folder_images)
-            shutil.copy2(mask, folder_masks)
-            return True
-        except Exception:
-            logger.exception(
-                "Failed to copy %s: %s and %s: %s",
+        if self.dry_run:
+            logger.info(
+                "Copying %s to %s and %s to %s",
                 image,
                 folder_images,
                 mask,
                 folder_masks,
             )
-            return False
+            return True
+        else:
+            try:
+                shutil.copy2(image, folder_images)
+                shutil.copy2(mask, folder_masks)
+                return True
+            except Exception:
+                logger.exception(
+                    "Failed to copy %s: %s and %s: %s",
+                    image,
+                    folder_images,
+                    mask,
+                    folder_masks,
+                )
+                return False
 
     def split(self, train_ratio: float, val_ratio: float, seed=RANDOM_SEED) -> None:
         if train_ratio + val_ratio > 1:

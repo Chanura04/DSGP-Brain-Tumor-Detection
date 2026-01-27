@@ -11,7 +11,11 @@ T = TypeVar("T")  # can be Path or Tuple[Path, Path]
 
 class BaseSplitter(ABC):
     def __init__(
-        self, interim_dataset_path: str, processed_dataset_path: str, lookfor: str
+        self,
+        interim_dataset_path: str,
+        processed_dataset_path: str,
+        lookfor: str,
+        dry_run: bool = False,
     ):
         self.interim_dataset_path: Path = Path(interim_dataset_path)
         self.processed_dataset_path: Path = Path(processed_dataset_path)
@@ -20,6 +24,7 @@ class BaseSplitter(ABC):
         ]
         self.source_word: str = lookfor
         self.labels: List[str] = ["train", "val", "test"]
+        self.dry_run = dry_run
 
     def __repr__(self):
         return f"{self.__class__.__name__}(source='{self.interim_dataset_path}')"

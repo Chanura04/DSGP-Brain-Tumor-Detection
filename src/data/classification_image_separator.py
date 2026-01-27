@@ -52,14 +52,17 @@ class ClassificationImageSeparator(ImageSeparator):
                 count_removed,
             )
 
-    @staticmethod
-    def _process_single_image(img: Path, dest: Path) -> bool:
+    def _process_single_image(self, img: Path, dest: Path) -> bool:
         try:
             if ImageSeparator.is_mostly_black(img):
                 return True  # removed
 
-            shutil.copy2(img, dest)
-            return False  # copied
+            if self.dry_run:
+                logger.info("Copying %s to %s", img, dest)
+                return False
+            else:
+                shutil.copy2(img, dest)
+                return False  # copied
         except Exception:
             logger.exception("File processing failed")
             return True
@@ -99,7 +102,7 @@ class ClassificationImageSeparator(ImageSeparator):
                 for batches in ImageSeparator.batch(images, BATCH_SIZE):
                     futures: List[Future[bool]] = [
                         executor.submit(
-                            ClassificationImageSeparator._process_single_image,
+                            self._process_single_image,
                             img,
                             out_folder / img.name,
                         )

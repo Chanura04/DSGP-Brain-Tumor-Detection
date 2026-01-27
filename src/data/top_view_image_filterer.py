@@ -45,6 +45,7 @@ class TopViewImageSelector:
         batch_size: int = 8,
         num_epochs: int = 5,
         learning_rate: float = 1e-4,
+        dry_run: bool = False,
     ):
         self.log_dir: Path = log_dir
 
@@ -53,6 +54,7 @@ class TopViewImageSelector:
         self.batch_size: int = batch_size
         self.num_epochs: int = num_epochs
         self.learning_rate: float = learning_rate
+        self.dry_run = dry_run
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.trained_dataset: Optional[datasets.ImageFolder] = None
         self.final_model: Optional[nn.Module] = model
@@ -225,7 +227,10 @@ class TopViewImageSelector:
                     dest = Path(out_folder) / img_path.name
                     if not dest.exists():
                         csv_writer.writerow([str(img_path), prob])
-                        shutil.copy2(img_path, dest)
+                        if self.dry_run:
+                            logger.info("Copying %s to %s", img_path, dest)
+                        else:
+                            shutil.copy2(img_path, dest)
 
             if len(predictions) > 0:
                 probs = torch.tensor([p[1] for p in predictions])
