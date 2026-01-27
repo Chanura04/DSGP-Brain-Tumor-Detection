@@ -1,3 +1,31 @@
+"""
+ImageSeparator Module
+
+This module provides the `ImageSeparator` abstract class, which is designed to filter out / copy
+low intensity images of the organized raw dataset to an interim dataset. It supports:
+
+- Filtering images by a the mean threshold/ mean intensity of the image.
+- Filtering images by a the bright pixel ratio of the image.
+- Filtering images by a the max brightness of the image.
+- Copying only valid image extensions.
+- Logging progress, duplicates, and summary information.
+- Dry-run mode to simulate file operations without writing files.
+- Measuring execution time for performance monitoring (via the `get_time` decorator).
+
+Dependencies:
+- cv2
+- numpy
+- pathlib
+- abc
+- typing
+- decorators: `get_time`, `deprecated`, `final`, `log_action`, `abstractmethod`, `staticmethod`
+- config: `MEAN_THRESHOLD`, `BRIGHT_PIXEL_RATIO`, `MAX_BRIGHTNESS`, `DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME`,
+`DEFAULT_SEPARATOR_OUTPUT_DIR_NAME`
+
+This module is useful for preparing datasets for machine learning, ensuring that
+only valid images are copied and that file operations are tracked.
+"""
+
 import cv2
 import numpy as np
 from pathlib import Path
@@ -17,6 +45,19 @@ from data.config import (
 
 
 class ImageSeparator(ABC):
+    """
+    An abstract class to filter out low intensity image files from an original raw dataset to an interim dataset.
+
+    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    extensions, logging progress, and dry-run mode for testing.
+
+    Attributes:
+        dataset_path (Path): Path to the original raw dataset folder.
+        lookfor (str): A folder name or class to process.
+        out (str): Subdirectory name for the filtered output.
+        dry_run (bool): If True, simulate copying without writing files.
+    """
+
     def __init__(
         self,
         dataset_path: str,
@@ -54,6 +95,22 @@ class ImageSeparator(ABC):
         mean_thresh: int = MEAN_THRESHOLD,
         bright_pixel_ratio: float = BRIGHT_PIXEL_RATIO,
     ) -> bool:
+        """
+        Determines whether an image is predominantly black or very dark.
+
+        This method reads an image in grayscale, calculates the mean pixel intensity,
+        and checks the proportion of bright pixels. An image is considered "mostly black"
+        if either:
+          1. The mean intensity is below `mean_thresh`, or
+          2. The ratio of pixels brighter than a threshold (`MAX_BRIGHTNESS`) is less than `bright_pixel_ratio`.
+
+          :param img_path: Path to the image file.
+          :param mean_thresh: The mean intensity threshold below which the image is
+          considered mostly black. Defaults to `MEAN_THRESHOLD`.
+          :param bright_pixel_ratio: Maximum allowed ratio of bright pixels for the
+          image to be considered mostly black. Defaults to `BRIGHT_PIXEL_RATIO`.
+          :return: True if the image is mostly black or if reading the image fails, False otherwise.
+        """
         img = cast(
             Optional[NDArray[np.generic]],
             cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE),
@@ -73,6 +130,12 @@ class ImageSeparator(ABC):
 
     @log_action
     def make_directory(self, name: Path) -> Path:
+        """
+        Create the filtered directory in the interim dataset.
+        If the directory already exists, it does nothing.
+        :param name: Subdirectory name to create inside interim dataset.
+        :return: Full path to the filtered directory.
+        """
         no_black_folder: Path = name / self.out
         no_black_folder.mkdir(parents=True, exist_ok=True)
         return no_black_folder

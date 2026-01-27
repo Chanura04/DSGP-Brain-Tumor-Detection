@@ -1,8 +1,48 @@
+"""
+ClassificationImageSeparator Module
+
+This module provides the `ClassificationImageSeparator` concrete class, which is designed to filter out / copy
+low intensity images of a classification dataset of the organized raw dataset to an interim dataset. It supports:
+
+- Filtering images by a the mean threshold/ mean intensity of the image.
+- Filtering images by a the bright pixel ratio of the image.
+- Filtering images by a the max brightness of the image.
+- Copying only valid image extensions.
+- Logging progress, duplicates, and summary information.
+- Dry-run mode to simulate file operations without writing files.
+- Measuring execution time for performance monitoring (via the `get_time` decorator).
+
+Typical usage:
+
+    from classification_image_separator import ClassificationImageSeparator
+
+    image_separator = ClassificationImageSeparator(
+        dataset_path="path/to/(mri, ct)"
+        lookfor="original",
+        out="no_black",
+        dry_run=False
+    )
+    image_separator.filter_low_intensity_images()
+
+Dependencies:
+- pathlib
+- concurrent
+- shutil
+- logging
+- typing
+- config: `MAX_WORKERS`, `BATCH_SIZE`
+- utils: `VALID_IMAGE_EXTENSIONS`
+
+This module is useful for preparing datasets for machine learning, ensuring that
+only valid images are copied and that file operations are tracked.
+"""
+
 from pathlib import Path
-from typing import List
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 import shutil
 import logging
+
+from typing import List
 
 from data.base_image_separator import ImageSeparator
 from utils.utils_config import VALID_IMAGE_EXTENSIONS
@@ -12,6 +52,20 @@ logger = logging.getLogger(__name__)
 
 
 class ClassificationImageSeparator(ImageSeparator):
+    """
+    A concrete class to filter out low intensity image files of a classification dataset from an original raw
+    dataset to an interim dataset.
+
+    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    extensions, logging progress, and dry-run mode for testing.
+
+    Attributes:
+        dataset_path (Path): Path to the original raw dataset folder.
+        lookfor (str): A folder name or class to process.
+        out (str): Subdirectory name for the filtered output.
+        dry_run (bool): If True, simulate copying without writing files.
+    """
+
     def __init__(self, dataset_path: str, lookfor: str, out: str, dry_run: bool):
         super().__init__(dataset_path, lookfor, out, dry_run)
 
@@ -53,6 +107,20 @@ class ClassificationImageSeparator(ImageSeparator):
             )
 
     def _process_single_image(self, img: Path, dest: Path) -> bool:
+        """
+        Process a single image by checking its intensity and optionally copying it.
+
+        This method performs the following steps:
+            1. Checks if the image is mostly black using `ImageSeparator.is_mostly_black`.
+            - If the image is mostly black or reading fails, it is considered "removed".
+            2. If `self.dry_run` is True, it logs the copy operation without actually copying.
+            3. If `self.dry_run` is False, it copies the image to the destination path.
+
+        :param img: Path to the source image file.
+        :param dest: Path to the destination where the image should be copied.
+
+        returns: True if the image was removed (mostly black or failed), False if it was copied or dry-run logged.
+        """
         try:
             if ImageSeparator.is_mostly_black(img):
                 return True  # removed
@@ -68,6 +136,20 @@ class ClassificationImageSeparator(ImageSeparator):
             return True
 
     def filter_low_intensity_images(self) -> None:
+        """
+        Filters out low-intensity (mostly black) images from source folders.
+
+        This method:
+            1. Iterates over each folder in `self.source_folders`.
+            2. Skips folders that do not exist or if the source and destination folders are the same.
+            3. Collects all valid image files (based on `VALID_IMAGE_EXTENSIONS`) from the source folder.
+            4. Processes images in batches using a ThreadPoolExecutor for parallel execution.
+            - Uses `_process_single_image` to determine if an image should be copied or removed.
+            5. Tracks and logs progress every 50 files.
+            6. Logs a summary of how many images were copied versus removed at the end of processing each folder.
+
+        return: None
+        """
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
             for source in self.source_folders:

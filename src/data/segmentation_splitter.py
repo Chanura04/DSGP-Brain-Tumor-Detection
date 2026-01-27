@@ -1,3 +1,39 @@
+"""
+SegmentationSplitter Module
+
+This module provides a concrete classe for splitting segmentation datasets into
+train, validation, and test sets.
+
+Features:
+    - Configurable train/val/test ratios.
+    - Dry-run mode to simulate file operations without writing files.
+    - Automatic creation of output directories.
+    - Parallel batch copying of images to improve efficiency.
+    - Logging of progress, skipped duplicates, and summary statistics.
+    - Shuffling of images or image-mask pairs using a fixed random seed.
+
+Typical usage:
+
+    from segmentation_splitter import SegmentationSplitter
+
+    splitter = SegmentationSplitter(
+        interim_dataset_path="path/to/interim",
+        processed_dataset_path="path/to/processed",
+        lookfor="no_black",
+        dry_run=False
+    )
+    splitter.split()
+
+Dependencies:
+    - pathlib, logging, shutil, numpy
+    - concurrent.futures for parallel copying
+    - utils: `get_time`, `log_action`, `RANDOM_SEED`
+    - config: `MAX_WORKERS`, `BATCH_SIZE`
+
+This module is useful for preparing datasets for training and evaluation of
+machine learning models, ensuring a controlled, reproducible split of data.
+"""
+
 import shutil
 import numpy as np
 from pathlib import Path
@@ -14,6 +50,19 @@ logger = logging.getLogger(__name__)
 
 
 class SegmentationSplitter(BaseSplitter):
+    """
+    Splits an image-mask paired dataset into train, validation, and test sets for segmentation tasks.
+
+    Inherits from BaseSplitter and implements the `split` method for image-mask pairs.
+
+    Features:
+        - Automatically finds corresponding masks for each image.
+        - Copies images and masks to their respective train/val/test folders.
+        - Skips duplicates automatically.
+        - Supports dry-run mode.
+        - Uses parallel batch copying for efficiency.
+    """
+
     def __init__(
         self,
         interim_dataset_path: str,
@@ -26,6 +75,14 @@ class SegmentationSplitter(BaseSplitter):
         self.base_name_mask: str = "mask"
 
     def copy_image(self, folder_images: Path, folder_masks: Path, pairs) -> bool:
+        """
+        Copy a single image-mask pair to the specified folders, skipping duplicates.
+
+        :param: folder_images: Destination folder for images.
+        :param: folder_masks: Destination folder for masks.
+        :param: Tuple of (image_path, mask_path).
+        :return:True if both files were copied, False if skipped or failed.
+        """
         image, mask = pairs
 
         dest_images = folder_images / image.name
@@ -59,7 +116,28 @@ class SegmentationSplitter(BaseSplitter):
                 return False
 
     def split(self, train_ratio: float, val_ratio: float, seed=RANDOM_SEED) -> None:
+        """
+        Split a paired image-mask dataset into training, validation, and test sets.
+
+        This method performs the following steps:
+            1. Validates that train_ratio + val_ratio <= 1.
+            2. Identifies the source image and mask folders under the interim dataset.
+            3. Collects all images and their corresponding masks that exist, forming (image, mask) pairs.
+            4. Shuffles the pairs using a reproducible random seed.
+            5. Calculates the number of pairs for train and validation sets; the remaining go to the test set.
+            6. Creates output directories for images and masks for each split (train, val, test).
+            7. Copies the pairs to their respective folders using `copy_images`.
+            8. Logs progress and output folder paths.
+
+        :param: train_ratio: Fraction of pairs to assign to the training set (0 < train_ratio <= 1).
+        :param: val_ratio: Fraction of pairs to assign to the validation set (0 <= val_ratio <= 1).
+        :param: seed: Random seed for reproducible shuffling. Defaults to `RANDOM_SEED`.
+
+        :raises: ValueError: If `train_ratio + val_ratio > 1`.
+        :raises: RuntimeError: If no images are found in the source image folder.
+        """
         if train_ratio + val_ratio > 1:
+            logger.error("train_ratio + val_ratio must be <= 1")
             raise ValueError("train_ratio + val_ratio must be <= 1")
 
         rng: np.random.Generator = np.random.default_rng(seed)
@@ -83,6 +161,7 @@ class SegmentationSplitter(BaseSplitter):
         mask_path: Path = mask_folder / self.source_word
 
         if len(list(image_path.glob("*.jpg"))) == 0:
+            logger.error("No images found in %s", image_path)
             raise RuntimeError(f"No images found in {image_path}")
 
         logger.info("Processing from: %s", str(image_path))
@@ -137,7 +216,17 @@ class SegmentationSplitter(BaseSplitter):
             pairs[train_count + val_count :],
         )
 
-    def copy_images(self, folder_images: Path, folder_masks: Path, images):
+    def copy_images(self, folder_images: Path, folder_masks: Path, images) -> None:
+        """
+        Copy multiple image-mask pairs to their respective folders in parallel batches.
+
+        Logs progress every 50 files and counts copied/skipped pairs.
+
+        :param: folder_images: Destination folder for images.
+        :param: folder_masks: Destination folder for masks.
+        :param: images: List of (image, mask) tuples to copy.
+        :return: None
+        """
         copied_count: int = 0
         skipped_count: int = 0
         processed = 0

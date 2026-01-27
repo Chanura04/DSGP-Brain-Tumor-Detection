@@ -88,7 +88,7 @@ class MoveImages:
         :param out: Name of output subdirectory. Defaults to DEFAULT_OUTPUT_DIR_NAME.
         :param include: If True, include subfolders matching folder names. Defaults to DEFAULT_INCLUDE_MODE.
         :param dry_run: If True, simulate copying without writing files. Defaults to False.
-        :return:
+        :return: None
         """
         self.raw_dataset_path: Path = Path(raw_dataset_path)
         self.interim_dataset_path: Path = Path(interim_dataset_path)

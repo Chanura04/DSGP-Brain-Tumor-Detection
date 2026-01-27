@@ -1,3 +1,57 @@
+"""
+TopViewImageSelector Module
+
+This module provides the `TopViewImageSelector` class, designed for semi-supervised selection
+of top-view images from a labeled dataset and large unlabeled datasets. It supports:
+
+- Training a ResNet18-based classifier on labeled images.
+- Preprocessing images with resizing, color jitter, normalization, and tensor conversion.
+- Filtering out low-confidence or non-top-view images during inference.
+- Copying high-confidence top-view images to output directories.
+- Generating CSV files with predictions and confidence scores.
+- Logging training metrics and prediction confidence distributions via TensorBoard.
+- Dry-run mode to simulate file operations without writing to disk.
+- Parallel batch processing of images to improve efficiency.
+- Configurable training parameters: batch size, number of epochs, learning rate.
+
+Typical usage:
+
+    from top_view_image_filterer import TopViewImageSelector
+
+    top_view_filterer = TopViewImageSelector(
+        log_dir="path/to/log",
+        labeled_images_path="path/to/labeled_images",
+        model=None,
+        batch_size=8,
+        num_epochs=5,
+        learning_rate=1e-4,
+        dry_run=False,
+    )
+    top_view_filterer.run_model()
+    top_view_filterer.model_predict(...)
+
+
+Dependencies:
+- shutil
+- pathlib
+- torch
+- torchvision
+- PIL
+- logging
+- json
+- csv
+- typing
+- decorators: `get_time`, `log_action`
+- config: `LOG_DIR`, `LABELED_IMAGES_DATA_DIR`, `IMG_TRANSFORM_RESIZE_SIZE`, `IMG_TRANSFORM_BRIGHTNESS`,
+          `IMG_TRANSFORM_CONTRAST`, `IMG_TRANSFORM_MEAN_VECTOR`, `IMG_TRANSFORM_STD_VECTOR`,
+          `DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME`, `DEFAULT_TOPVIEW_OUTPUT_DIR_NAME`,
+          `DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME`, `CONFIDENCE_THRESHOLD`,
+- utils: `VALID_IMAGE_EXTENSIONS`
+
+This module is useful for preparing datasets for downstream machine learning tasks, ensuring
+that only high-confidence top-view images are used for further processing or model training.
+"""
+
 import shutil
 from pathlib import Path
 import torch
@@ -29,14 +83,37 @@ from data.config import (
 
 logger = logging.getLogger(__name__)
 
-# Semi-supervised learning
-
-# Train on: Small, clean, human-labeled data, Balanced (top vs other)
-# Infer on: Large, noisy, unlabeled datasets
-# Select: Only high-confidence top-view images
-
 
 class TopViewImageSelector:
+    """
+    A semi-supervised image selector for top-view images using PyTorch.
+
+    This class handles training a model on labeled top-view images, performing inference
+    on unlabeled datasets, filtering low-intensity (mostly black) images, and copying
+    high-confidence top-view images to output directories.
+
+    Features:
+        - Dataset handling and preprocessing with torchvision transforms.
+        - Model definition, training, and evaluation using a ResNet18 architecture.
+        - Top-view image prediction with confidence thresholding.
+        - Optional dry-run mode for testing file operations.
+        - TensorBoard logging for training metrics and prediction distributions.
+        - File and directory management for dataset organization.
+
+    Attributes:
+        log_dir (Path): Directory to store logs and model checkpoints.
+        labeled_images_path (Path): Path to labeled training images.
+        batch_size (int): Batch size for training and inference.
+        num_epochs (int): Number of epochs for model training.
+        learning_rate (float): Learning rate for optimizer.
+        dry_run (bool): If True, logs file operations without performing them.
+        device (torch.device): Device used for training and inference (CPU or GPU).
+        trained_dataset (Optional[datasets.ImageFolder]): PyTorch dataset for training.
+        final_model (Optional[nn.Module]): Trained model for top-view image prediction.
+        writer (SummaryWriter): TensorBoard writer for logging metrics.
+        metrics (Dict[str, List[float]]): Dictionary to store training loss and other metrics.
+    """
+
     def __init__(
         self,
         log_dir: Path = LOG_DIR,
@@ -63,12 +140,28 @@ class TopViewImageSelector:
 
     @log_action
     def make_directory(self, name: Path, out: Path) -> Path:
+        """
+        Create the filtered directory in the interim dataset.
+        If the directory already exists, it does nothing.
+        :param name: Subdirectory name to create inside interim dataset.
+        :param out: Subdirectory name to create under the base path.
+        :return: Full path to the filtered directory.
+        """
         top_view_folder = name / out
         top_view_folder.mkdir(parents=True, exist_ok=True)
         return top_view_folder
 
     @log_action
-    def define_train(self) -> transforms.Compose:
+    def _define_train(self) -> transforms.Compose:
+        """
+        Define the transformation pipeline for training images.
+
+        :return: transforms.Compose: A composition of image transformations including:
+                - Resize
+                - Color jitter (brightness and contrast)
+                - Conversion to tensor
+                - Normalization using predefined mean and standard deviation
+        """
         return transforms.Compose(
             [
                 transforms.Resize(IMG_TRANSFORM_RESIZE_SIZE),
@@ -84,7 +177,13 @@ class TopViewImageSelector:
 
     @log_action
     @get_time
-    def load_data(self, train_transform: transforms.Compose) -> DataLoader:
+    def _load_data(self, train_transform: transforms.Compose) -> DataLoader:
+        """
+        Load labeled images as a PyTorch DataLoader.
+
+        :param: train_transform (transforms.Compose): Transformations to apply to images.
+        :return: A DataLoader object for iterating over the labeled dataset.
+        """
         self.trained_dataset = datasets.ImageFolder(
             self.labeled_images_path, transform=train_transform
         )
@@ -94,7 +193,13 @@ class TopViewImageSelector:
         return dataloader
 
     @log_action
-    def define_model(self) -> nn.Module:
+    def _define_model(self) -> nn.Module:
+        """
+        Define the ResNet18 model architecture for top-view classification.
+        Modifies the final fully connected layer to output two classes: "top" vs "other".
+
+        :return: Initialized and device-assigned ResNet18 model.
+        """
         weights = models.ResNet18_Weights.IMAGENET1K_V1
         model: nn.Module = models.resnet18(weights=weights)
         model.fc = nn.Linear(model.fc.in_features, 2)  # top vs other
@@ -102,24 +207,42 @@ class TopViewImageSelector:
         return model
 
     @log_action
-    def compile_model(
+    def _compile_model(
         self, model: nn.Module
     ) -> Tuple[nn.Module, torch.optim.Optimizer]:
+        """
+        Compile the model with loss function and optimizer for training.
+
+        :param: model: Model to compile.
+        :return: The loss criterion and optimizer.
+        """
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
         return criterion, optimizer
 
     @log_action
     @get_time
-    def train_model(self) -> None:
+    def run_model(self) -> None:
+        """
+        Train the top-view classifier model on labeled images.
+
+        Workflow:
+            - Prepares dataset and DataLoader.
+            - Defines model, loss, and optimizer.
+            - Runs training loop over specified number of epochs.
+            - Logs epoch loss to TensorBoard.
+            - Saves metrics to JSON and model checkpoint to disk.
+
+        :return: None
+        """
         if self.final_model is None and self.trained_dataset is not None:
             logger.info("===== TRAINING STARTED =====")
             logger.info(f"Dataset: {self.labeled_images_path}")
             logger.info(f"Epochs: {self.num_epochs}, Batch size: {self.batch_size}")
-            train_transform = self.define_train()
-            dataloader = self.load_data(train_transform)
-            self.final_model = self.define_model()
-            criterion, optimizer = self.compile_model(self.final_model)
+            train_transform = self._define_train()
+            dataloader = self._load_data(train_transform)
+            self.final_model = self._define_model()
+            criterion, optimizer = self._compile_model(self.final_model)
 
             self.final_model.train()
             for epoch in range(self.num_epochs):
@@ -154,6 +277,9 @@ class TopViewImageSelector:
 
             logger.info("===== TRAINING FINISHED =====")
 
+        else:
+            logger.info("Using given model!")
+
     @log_action
     @get_time
     def model_predict(
@@ -164,8 +290,28 @@ class TopViewImageSelector:
         predictions_out_file: str = DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
         confidence_thresh: float = CONFIDENCE_THRESHOLD,
     ) -> None:
+        """
+        Predict top-view images in a dataset using the trained model and copy high-confidence images.
+
+        Workflow:
+            1. Validates that the model is trained.
+            2. Iterates over source folders to locate images in the `lookfor` subfolder.
+            3. Applies preprocessing transforms and performs model inference.
+            4. Filters images based on a confidence threshold for the "top" class.
+            5. Copies high-confidence images to the output folder, optionally logging in dry-run mode.
+            6. Saves predictions in CSV format and logs confidence distributions to TensorBoard.
+
+        :param: dataset_path: Root path containing source folders of images.
+        :param: lookfor: Subfolder name to look for images. Defaults to `DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME`.
+        :param: out: Output folder name for high-confidence images. Defaults to `DEFAULT_TOPVIEW_OUTPUT_DIR_NAME`.
+        :param: predictions_out_file: CSV file to save predictions. Defaults to `DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME`.
+        :param: confidence_thresh: Minimum probability threshold to consider an image as top-view.
+        Defaults to `CONFIDENCE_THRESHOLD`.
+
+        :raises: RuntimeError: If the model has not been trained.
+        """
         if self.final_model is None or self.trained_dataset is None:
-            logger.warning("Model not trained. Call train_model() first.")
+            logger.error("Model not trained. Call train_model() first.")
             raise RuntimeError("Model not trained. Call train_model() first.")
 
         # Source folders to inference / predict top-view images
