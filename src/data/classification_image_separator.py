@@ -46,7 +46,12 @@ from typing import List
 
 from data.base_image_separator import ImageSeparator
 from utils.utils_config import VALID_IMAGE_EXTENSIONS
-from data.config import MAX_WORKERS, BATCH_SIZE
+from data.config import (
+    MAX_WORKERS,
+    BATCH_SIZE,
+    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +71,13 @@ class ClassificationImageSeparator(ImageSeparator):
         dry_run (bool): If True, simulate copying without writing files.
     """
 
-    def __init__(self, dataset_path: str, lookfor: str, out: str, dry_run: bool):
+    def __init__(
+        self,
+        dataset_path: str,
+        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+        dry_run: bool = False,
+    ):
         super().__init__(dataset_path, lookfor, out, dry_run)
 
         self.source_folders: List[Path] = [

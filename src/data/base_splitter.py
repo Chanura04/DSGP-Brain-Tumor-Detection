@@ -33,6 +33,7 @@ from abc import ABC, abstractmethod
 
 from utils.utils_config import RANDOM_SEED
 from utils.decorators import get_time, log_action
+from data.config import DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
 from typing import List, Generator, TypeVar
 
@@ -58,7 +59,7 @@ class BaseSplitter(ABC):
         self,
         interim_dataset_path: str,
         processed_dataset_path: str,
-        lookfor: str,
+        lookfor: str = DEFAULT_SPLITTING_LOOKFOR_DIR_NAME,
         dry_run: bool = False,
     ):
         self.interim_dataset_path: Path = Path(interim_dataset_path)

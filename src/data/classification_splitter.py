@@ -43,7 +43,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from data.base_splitter import BaseSplitter
 
 from utils.utils_config import RANDOM_SEED
-from data.config import MAX_WORKERS, BATCH_SIZE
+from data.config import MAX_WORKERS, BATCH_SIZE, DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class ClassificationSplitter(BaseSplitter):
         self,
         interim_dataset_path: str,
         processed_dataset_path: str,
-        lookfor: str,
+        lookfor: str = DEFAULT_SPLITTING_LOOKFOR_DIR_NAME,
         dry_run: bool = False,
     ):
         super().__init__(interim_dataset_path, processed_dataset_path, lookfor, dry_run)

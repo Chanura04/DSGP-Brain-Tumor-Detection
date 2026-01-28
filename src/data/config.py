@@ -38,3 +38,5 @@ DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME: Final[str] = "no_black"
 DEFAULT_TOPVIEW_OUTPUT_DIR_NAME: Final[str] = "top_view"
 DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME: Final[str] = "predictions.csv"
 CONFIDENCE_THRESHOLD: Final[float] = 0.99
+
+DEFAULT_SPLITTING_LOOKFOR_DIR_NAME: Final[str] = "top_view"

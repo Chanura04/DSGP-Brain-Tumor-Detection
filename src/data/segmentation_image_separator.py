@@ -50,6 +50,8 @@ from utils.utils_config import VALID_IMAGE_EXTENSIONS
 from data.config import (
     MAX_WORKERS,
     BATCH_SIZE,
+    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
     DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
     DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
 )
@@ -78,9 +80,9 @@ class SegmentationImageSeparator(ImageSeparator):
     def __init__(
         self,
         dataset_path: str,
-        lookfor: str,
-        out: str,
-        dry_run: bool,
+        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+        dry_run: bool = False,
         source: str = DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
         apply_to: str = DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
     ):

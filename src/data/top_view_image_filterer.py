@@ -80,7 +80,6 @@ from data.config import (
     CONFIDENCE_THRESHOLD,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +117,7 @@ class TopViewImageSelector:
         self,
         log_dir: Path = LOG_DIR,
         labeled_images_path: Path = LABELED_IMAGES_DATA_DIR,
-        model=None,
+        path_to_trained_model=None,
         batch_size: int = 8,
         num_epochs: int = 5,
         learning_rate: float = 1e-4,
@@ -134,9 +133,36 @@ class TopViewImageSelector:
         self.dry_run = dry_run
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.trained_dataset: Optional[datasets.ImageFolder] = None
-        self.final_model: Optional[nn.Module] = model
-        self.writer = SummaryWriter(self.log_dir / "tensorboard")
+        self.final_model: Optional[nn.Module] = self._load_model_state_dict(
+            path_to_trained_model
+        )
+        self.class_to_idx: Optional[Dict[str, int]] = None
+        self.writer = SummaryWriter(str(self.log_dir / "tensorboard"))
         self.metrics: Dict[str, List[float]] = {"epoch_loss": []}
+
+    def _load_model_state_dict(self, path_to_trained_model) -> Optional[nn.Module]:
+        try:
+            ckpt = torch.load(path_to_trained_model, map_location=self.device)
+            weights = models.ResNet18_Weights.IMAGENET1K_V1
+            model = models.resnet18(weights=weights)
+
+            class_to_idx = ckpt.get("class_to_idx")
+            if class_to_idx is None:
+                logger.error("Checkpoint missing class_to_idx")
+                raise ValueError("Checkpoint missing class_to_idx")
+
+            self.class_to_idx = class_to_idx
+            num_classes = len(class_to_idx)
+            model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+            model.load_state_dict(ckpt["model_state_dict"])
+            model.to(self.device)
+            model.eval()
+
+            return model
+        except Exception:
+            logger.exception("Could not load model in %s", path_to_trained_model)
+            return None
 
     @log_action
     def make_directory(self, name: Path, out: Path) -> Path:
@@ -235,7 +261,7 @@ class TopViewImageSelector:
 
         :return: None
         """
-        if self.final_model is None and self.trained_dataset is not None:
+        if self.final_model is None:
             logger.info("===== TRAINING STARTED =====")
             logger.info(f"Dataset: {self.labeled_images_path}")
             logger.info(f"Epochs: {self.num_epochs}, Batch size: {self.batch_size}")
@@ -260,22 +286,30 @@ class TopViewImageSelector:
                 self.metrics["epoch_loss"].append(epoch_loss)
                 self.writer.add_scalar("Loss/train", epoch_loss, epoch)
                 logger.info(
-                    f"Epoch {epoch+1}/{self.num_epochs}, Loss: {epoch_loss:.4f}"
+                    f"Epoch {epoch + 1}/{self.num_epochs}, Loss: {epoch_loss:.4f}"
                 )
 
             with open(self.log_dir / "metrics.json", "w") as f:
                 json.dump(self.metrics, f, indent=4)
 
+            if self.trained_dataset is None:
+                logger.error("No images to trained on")
+                raise RuntimeError("No images to trained on")
+
             torch.save(
                 {
                     "model_state_dict": self.final_model.state_dict(),
                     "class_to_idx": self.trained_dataset.class_to_idx,
+                    "arch": "resnet18",
+                    "weights": "IMAGENET1K_V1",
                 },
                 self.log_dir / "model.pth",
             )
             logger.info(f"Model saved to {self.log_dir / 'model.pth'}")
 
             logger.info("===== TRAINING FINISHED =====")
+
+            self.class_to_idx = self.trained_dataset.class_to_idx
 
         else:
             logger.info("Using given model!")
@@ -310,7 +344,7 @@ class TopViewImageSelector:
 
         :raises: RuntimeError: If the model has not been trained.
         """
-        if self.final_model is None or self.trained_dataset is None:
+        if self.final_model is None or self.class_to_idx is None:
             logger.error("Model not trained. Call train_model() first.")
             raise RuntimeError("Model not trained. Call train_model() first.")
 
@@ -353,7 +387,7 @@ class TopViewImageSelector:
             predictions: List[Tuple[Path, float]] = []
 
             with torch.inference_mode():
-                top_idx = self.trained_dataset.class_to_idx.get("top", 0)
+                top_idx = self.class_to_idx["top"]
                 for img_path in source_path.glob("*.*"):
                     if img_path.suffix.lower() in VALID_IMAGE_EXTENSIONS:
                         img: Image.Image = Image.open(img_path).convert("RGB")
