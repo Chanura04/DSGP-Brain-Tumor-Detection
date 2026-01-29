@@ -17,6 +17,8 @@ data/processed/**
 models/*.pkl
 models/*.h5
 models/*.joblib
+models/*.pt
+models/*.pth
 
 # Environment files
 .venv/
