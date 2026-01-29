@@ -13,8 +13,8 @@ from matplotlib.artist import Artist
 from matplotlib.patches import Rectangle
 from numpy.typing import NDArray
 
-import visualization.config as cfg
-from visualization.base_visualizer import BaseVisualizer
+import src.visualization.config as cfg
+from src.visualization.base_visualizer import BaseVisualizer
 
 
 @final

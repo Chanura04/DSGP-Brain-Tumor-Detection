@@ -6,7 +6,7 @@ from typing import Tuple, Optional
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-import visualization.config as cfg
+import src.visualization.config as cfg
 
 
 class BaseVisualizer:
