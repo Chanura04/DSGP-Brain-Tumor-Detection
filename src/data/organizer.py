@@ -43,9 +43,9 @@ from typing import List, Generator
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from utils.utils_config import VALID_IMAGE_EXTENSIONS
-from utils.decorators import get_time, log_action, deprecated
-from data.config import (
+from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
+from src.utils.decorators import get_time, log_action, deprecated
+from src.data.config import (
     DEFAULT_INCLUDE_MODE,
     DEFAULT_ORGANIZE_OUTPUT_DIR_NAME,
     MAX_WORKERS,

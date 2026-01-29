@@ -44,9 +44,9 @@ import logging
 
 from typing import List
 
-from data.base_image_separator import ImageSeparator
-from utils.utils_config import VALID_IMAGE_EXTENSIONS
-from data.config import (
+from src.data.base_image_separator import ImageSeparator
+from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
+from src.data.config import (
     MAX_WORKERS,
     BATCH_SIZE,
     DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,

@@ -22,4 +22,4 @@ INTERIM_DATA_DIR: Path = DATA_DIR / "interim"
 PROCESSED_DATA_DIR: Path = DATA_DIR / "processed"
 LABELED_IMAGES_DATA_DIR: Path = DATA_DIR / "labeled_images"
 
-LOG_DIR: Path = Path("Logs")
+LOG_DIR: Path = Path("logs")

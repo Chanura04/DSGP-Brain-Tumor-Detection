@@ -53,22 +53,24 @@ that only high-confidence top-view images are used for further processing or mod
 """
 
 import shutil
+import os
 from pathlib import Path
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms, models
-from PIL import Image
 import logging
 import json
-import csv
+import pandas as pd
 from torch.utils.tensorboard import SummaryWriter
-from typing import List, Optional, Dict, Tuple, cast
+from PIL import Image
+from concurrent.futures import ThreadPoolExecutor, Future, as_completed
+from typing import List, Optional, Dict, Tuple
 
-from utils.utils_config import VALID_IMAGE_EXTENSIONS
-from utils.decorators import get_time, log_action
-from utils.file_utils import LOG_DIR, LABELED_IMAGES_DATA_DIR
-from data.config import (
+from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
+from src.utils.decorators import get_time, log_action
+from src.utils.file_utils import LOG_DIR, LABELED_IMAGES_DATA_DIR
+from src.data.config import (
     IMG_TRANSFORM_RESIZE_SIZE,
     IMG_TRANSFORM_BRIGHTNESS,
     IMG_TRANSFORM_CONTRAST,
@@ -77,10 +79,28 @@ from data.config import (
     DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
     DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
     DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
-    CONFIDENCE_THRESHOLD,
+    CONFIDENCE_THRESHOLD, MAX_WORKERS,
 )
 
 logger = logging.getLogger(__name__)
+
+torch.set_num_threads(os.cpu_count() // 2)
+torch.set_num_interop_threads(1)
+
+
+class ImageDataset(Dataset):
+    def __init__(self, image_paths, transform):
+        self.image_paths = image_paths
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        path = self.image_paths[idx]
+        img = Image.open(path).convert("RGB")
+        x = self.transform(img)
+        return x, str(path)
 
 
 class TopViewImageSelector:
@@ -114,14 +134,14 @@ class TopViewImageSelector:
     """
 
     def __init__(
-        self,
-        log_dir: Path = LOG_DIR,
-        labeled_images_path: Path = LABELED_IMAGES_DATA_DIR,
-        path_to_trained_model=None,
-        batch_size: int = 8,
-        num_epochs: int = 5,
-        learning_rate: float = 1e-4,
-        dry_run: bool = False,
+            self,
+            log_dir: Path = LOG_DIR,
+            labeled_images_path: Path = LABELED_IMAGES_DATA_DIR,
+            path_to_trained_model=None,
+            batch_size: int = 32,
+            num_epochs: int = 10,
+            learning_rate: float = 1e-4,
+            dry_run: bool = False,
     ):
         self.log_dir: Path = log_dir
 
@@ -133,10 +153,10 @@ class TopViewImageSelector:
         self.dry_run = dry_run
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.trained_dataset: Optional[datasets.ImageFolder] = None
+        self.class_to_idx: Optional[Dict[str, int]] = None
         self.final_model: Optional[nn.Module] = self._load_model_state_dict(
             path_to_trained_model
         )
-        self.class_to_idx: Optional[Dict[str, int]] = None
         self.writer = SummaryWriter(str(self.log_dir / "tensorboard"))
         self.metrics: Dict[str, List[float]] = {"epoch_loss": []}
 
@@ -159,7 +179,10 @@ class TopViewImageSelector:
             model.to(self.device)
             model.eval()
 
+            logger.info("Model loaded")
+
             return model
+
         except Exception:
             logger.exception("Could not load model in %s", path_to_trained_model)
             return None
@@ -214,7 +237,8 @@ class TopViewImageSelector:
             self.labeled_images_path, transform=train_transform
         )
         dataloader = DataLoader(
-            self.trained_dataset, batch_size=self.batch_size, shuffle=True
+            self.trained_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2, prefetch_factor=2,
+            persistent_workers=True
         )
         return dataloader
 
@@ -234,7 +258,7 @@ class TopViewImageSelector:
 
     @log_action
     def _compile_model(
-        self, model: nn.Module
+            self, model: nn.Module
     ) -> Tuple[nn.Module, torch.optim.Optimizer]:
         """
         Compile the model with loss function and optimizer for training.
@@ -314,15 +338,50 @@ class TopViewImageSelector:
         else:
             logger.info("Using given model!")
 
+    def copy_image(self, folder: Path, image) -> bool:
+        """
+        Copy a single image to the specified folder, skipping duplicates.
+
+        :param: folder: Destination folder.
+        :param: image: Path to the source image.
+        :return: True if image was copied, False if skipped or failed.
+        """
+        dest = folder / image.name
+        if dest.exists():
+            return False
+
+        if self.dry_run:
+            logger.info("Copying %s to %s", image, folder)
+            return True
+        else:
+            try:
+                shutil.copy2(image, folder)
+                return True
+            except Exception:
+                logger.exception("Failed to copy %s: %s", image, folder)
+                return False
+
+    @staticmethod
+    def define_test_transform() -> transforms.Compose:
+        return transforms.Compose(
+            [
+                transforms.Resize(IMG_TRANSFORM_RESIZE_SIZE),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=IMG_TRANSFORM_MEAN_VECTOR, std=IMG_TRANSFORM_STD_VECTOR
+                ),
+            ]
+        )
+
     @log_action
     @get_time
     def model_predict(
-        self,
-        dataset_path: str,
-        lookfor: str = DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
-        predictions_out_file: str = DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
-        confidence_thresh: float = CONFIDENCE_THRESHOLD,
+            self,
+            dataset_path: str,
+            lookfor: str = DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
+            out: str = DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
+            predictions_out_file: str = DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
+            confidence_thresh: float = CONFIDENCE_THRESHOLD,
     ) -> None:
         """
         Predict top-view images in a dataset using the trained model and copy high-confidence images.
@@ -353,74 +412,91 @@ class TopViewImageSelector:
             f for f in Path(dataset_path).iterdir() if f.is_dir()
         ]
 
-        csv_path = self.log_dir / predictions_out_file
-        with open(csv_path, "w", newline="") as f:
-            csv_writer = csv.writer(f)
-            csv_writer.writerow(["image_path", "top_probability"])
+        processed: int = 0
+        copied_count: int = 0
+        skipped_count: int = 0
 
-        for source in source_folders:
-            source_path = source / lookfor
+        preproc = self.define_test_transform()
 
-            logger.info(f"Processing dataset: {source_path}")
+        all_images = []
 
-            if not source_path.exists():
-                logger.warning(f"Skipping (no '{lookfor}' folder): {source_path}")
-                continue
+        with ThreadPoolExecutor(max_workers=int(MAX_WORKERS)) as executor:
 
-            out_folder = self.make_directory(source, Path(out))
+            for source in source_folders:
+                source_path = source / lookfor
 
-            if source_path.resolve() == Path(out_folder).resolve():
-                logger.warning("Source and destination are the same, skipping")
-                continue
+                logger.info(f"Processing dataset: {source_path}")
 
-            self.final_model.eval()
-            preproc: transforms.Compose = transforms.Compose(
-                [
-                    transforms.Resize(IMG_TRANSFORM_RESIZE_SIZE),
-                    transforms.ToTensor(),
-                    transforms.Normalize(
-                        mean=IMG_TRANSFORM_MEAN_VECTOR, std=IMG_TRANSFORM_STD_VECTOR
-                    ),
+                if not source_path.exists():
+                    logger.warning(f"Skipping (no '{lookfor}' folder): {source_path}")
+                    continue
+
+                out_folder = self.make_directory(source, Path(out))
+
+                if source_path.resolve() == Path(out_folder).resolve():
+                    logger.warning("Source and destination are the same, skipping")
+                    continue
+
+                image_paths = [
+                    p for p in source_path.iterdir()
+                    if p.suffix.lower() in VALID_IMAGE_EXTENSIONS
                 ]
-            )
 
-            predictions: List[Tuple[Path, float]] = []
+                test_dataset = ImageDataset(image_paths=image_paths, transform=preproc)
 
-            with torch.inference_mode():
-                top_idx = self.class_to_idx["top"]
-                for img_path in source_path.glob("*.*"):
-                    if img_path.suffix.lower() in VALID_IMAGE_EXTENSIONS:
-                        img: Image.Image = Image.open(img_path).convert("RGB")
-                        img_tensor = cast(torch.Tensor, preproc(img))
-                        x: torch.Tensor = img_tensor.unsqueeze(0).to(self.device)
-                        logits: torch.Tensor = self.final_model(x)
-                        probs: torch.Tensor = torch.softmax(logits, dim=1)
-                        top_prob: float = probs[0][top_idx].item()
-                        predictions.append((img_path, top_prob))
+                test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=2,
+                                             prefetch_factor=2, persistent_workers=True)
 
-            predictions = [p for p in predictions if p[1] >= confidence_thresh]
-            predictions.sort(key=lambda x: x[1], reverse=True)
+                current_images = []
 
-            with open(csv_path, "a", newline="") as f:
-                csv_writer = csv.writer(f)
-                for img_path, prob in predictions:
-                    dest = Path(out_folder) / img_path.name
-                    if not dest.exists():
-                        csv_writer.writerow([str(img_path), prob])
-                        if self.dry_run:
-                            logger.info("Copying %s to %s", img_path, dest)
-                        else:
-                            shutil.copy2(img_path, dest)
+                self.final_model.eval()
+                with torch.inference_mode():
+                    top_idx = self.class_to_idx["top"]
+                    for X, paths in test_dataloader:
+                        X = X.to(self.device)
+                        logits: torch.Tensor = self.final_model(X)
+                        probs: torch.Tensor = torch.softmax(logits, dim=1)[:, top_idx]
 
-            if len(predictions) > 0:
-                probs = torch.tensor([p[1] for p in predictions])
-                self.writer.add_histogram(
-                    "TopView_Confidence",
-                    probs,
-                    global_step=len(self.metrics["epoch_loss"]),
-                )
+                        # Filter high-confidence images
+                        high_conf = [(Path(p), prob) for p, prob in zip(paths, probs) if prob >= confidence_thresh]
+
+                        if not high_conf:
+                            continue
+
+                        current_images.extend(high_conf)
+
+                all_images.extend(current_images)
+
+                # Copy files concurrently
+                futures: List[Future[bool]] = [
+                    executor.submit(self.copy_image, out_folder, img_path)
+                    for img_path, _ in current_images
+                ]
+
+                for future in as_completed(futures):
+                    processed += 1
+                    if future.result():
+                        copied_count += 1
+                    else:
+                        skipped_count += 1
+
+                    if processed % 50 == 0:
+                        logger.info("Processed %d files so far in folder %s", processed, source_path)
+
                 logger.info(
-                    f"Top-view images copied to '{out_folder}'. Total: {len(predictions)}"
+                    "Look at '%s': copied %d images, skipped %d non-top-view images",
+                    source_path,
+                    copied_count,
+                    skipped_count,
                 )
+
+                logger.info(
+                    f"Top-view images copied to '{out_folder}'."
+                )
+
+        csv_path = self.log_dir / predictions_out_file
+
+        df = pd.DataFrame(data=all_images, columns=["image_path", "top_probability"])
+        df.to_csv(csv_path)
 
         self.writer.close()

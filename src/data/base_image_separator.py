@@ -33,9 +33,9 @@ from abc import ABC, abstractmethod
 from typing import final, Optional, cast, Generator, List
 from numpy.typing import NDArray
 
-from utils.decorators import get_time, log_action, deprecated
+from src.utils.decorators import get_time, log_action, deprecated
 
-from data.config import (
+from src.data.config import (
     MEAN_THRESHOLD,
     BRIGHT_PIXEL_RATIO,
     MAX_BRIGHTNESS,

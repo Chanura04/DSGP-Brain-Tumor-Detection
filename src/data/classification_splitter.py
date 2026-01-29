@@ -40,10 +40,10 @@ from pathlib import Path
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from data.base_splitter import BaseSplitter
+from src.data.base_splitter import BaseSplitter
 
-from utils.utils_config import RANDOM_SEED
-from data.config import MAX_WORKERS, BATCH_SIZE, DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
+from src.utils.utils_config import RANDOM_SEED
+from src.data.config import MAX_WORKERS, BATCH_SIZE, DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
 logger = logging.getLogger(__name__)
 

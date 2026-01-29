@@ -31,9 +31,9 @@ machine learning models, ensuring a controlled, reproducible split of data.
 from pathlib import Path
 from abc import ABC, abstractmethod
 
-from utils.utils_config import RANDOM_SEED
-from utils.decorators import get_time, log_action
-from data.config import DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
+from src.utils.utils_config import RANDOM_SEED
+from src.utils.decorators import get_time, log_action
+from src.data.config import DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
 from typing import List, Generator, TypeVar
 
