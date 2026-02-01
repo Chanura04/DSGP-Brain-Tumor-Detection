@@ -29,5 +29,8 @@ def setup_logging() -> None:
     :return:
     """
     logging.basicConfig(
-        level=logging.INFO, format=LOG_FORMAT, filename=str(LOG_DIR / "log.log"), filemode="a"
+        level=logging.INFO,
+        format=LOG_FORMAT,
+        filename=str(LOG_DIR / "log.log"),
+        filemode="a",
     )

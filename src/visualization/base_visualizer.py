@@ -10,7 +10,7 @@ import src.visualization.config as cfg
 
 
 class BaseVisualizer:
-    def __init__(self, dataset_path: str, dataframe_path: str = ""):
+    def __init__(self, dataset_path: str = "", dataframe_path: str = ""):
         self.dataset_path: Path = Path(dataset_path)
         self.dataframe_path: Path = Path(dataframe_path)
 

@@ -79,7 +79,8 @@ from src.data.config import (
     DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
     DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
     DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
-    CONFIDENCE_THRESHOLD, MAX_WORKERS,
+    CONFIDENCE_THRESHOLD,
+    MAX_WORKERS,
 )
 
 logger = logging.getLogger(__name__)
@@ -134,14 +135,14 @@ class TopViewImageSelector:
     """
 
     def __init__(
-            self,
-            log_dir: Path = LOG_DIR,
-            labeled_images_path: Path = LABELED_IMAGES_DATA_DIR,
-            path_to_trained_model=None,
-            batch_size: int = 32,
-            num_epochs: int = 10,
-            learning_rate: float = 1e-4,
-            dry_run: bool = False,
+        self,
+        log_dir: Path = LOG_DIR,
+        labeled_images_path: Path = LABELED_IMAGES_DATA_DIR,
+        path_to_trained_model=None,
+        batch_size: int = 32,
+        num_epochs: int = 10,
+        learning_rate: float = 1e-4,
+        dry_run: bool = False,
     ):
         self.log_dir: Path = log_dir
 
@@ -237,8 +238,12 @@ class TopViewImageSelector:
             self.labeled_images_path, transform=train_transform
         )
         dataloader = DataLoader(
-            self.trained_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2, prefetch_factor=2,
-            persistent_workers=True
+            self.trained_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=2,
+            prefetch_factor=2,
+            persistent_workers=True,
         )
         return dataloader
 
@@ -258,7 +263,7 @@ class TopViewImageSelector:
 
     @log_action
     def _compile_model(
-            self, model: nn.Module
+        self, model: nn.Module
     ) -> Tuple[nn.Module, torch.optim.Optimizer]:
         """
         Compile the model with loss function and optimizer for training.
@@ -376,12 +381,12 @@ class TopViewImageSelector:
     @log_action
     @get_time
     def model_predict(
-            self,
-            dataset_path: str,
-            lookfor: str = DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
-            out: str = DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
-            predictions_out_file: str = DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
-            confidence_thresh: float = CONFIDENCE_THRESHOLD,
+        self,
+        dataset_path: str,
+        lookfor: str = DEFAULT_TOPVIEW_LOOKFOR_DIR_NAME,
+        out: str = DEFAULT_TOPVIEW_OUTPUT_DIR_NAME,
+        predictions_out_file: str = DEFAULT_TOPVIEW_PREDICTIONS_FILE_NAME,
+        confidence_thresh: float = CONFIDENCE_THRESHOLD,
     ) -> None:
         """
         Predict top-view images in a dataset using the trained model and copy high-confidence images.
@@ -438,14 +443,21 @@ class TopViewImageSelector:
                     continue
 
                 image_paths = [
-                    p for p in source_path.iterdir()
+                    p
+                    for p in source_path.iterdir()
                     if p.suffix.lower() in VALID_IMAGE_EXTENSIONS
                 ]
 
                 test_dataset = ImageDataset(image_paths=image_paths, transform=preproc)
 
-                test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=2,
-                                             prefetch_factor=2, persistent_workers=True)
+                test_dataloader = DataLoader(
+                    test_dataset,
+                    batch_size=self.batch_size,
+                    shuffle=False,
+                    num_workers=2,
+                    prefetch_factor=2,
+                    persistent_workers=True,
+                )
 
                 current_images = []
 
@@ -458,7 +470,11 @@ class TopViewImageSelector:
                         probs: torch.Tensor = torch.softmax(logits, dim=1)[:, top_idx]
 
                         # Filter high-confidence images
-                        high_conf = [(Path(p), prob) for p, prob in zip(paths, probs) if prob >= confidence_thresh]
+                        high_conf = [
+                            (Path(p), prob)
+                            for p, prob in zip(paths, probs)
+                            if prob >= confidence_thresh
+                        ]
 
                         if not high_conf:
                             continue
@@ -481,7 +497,11 @@ class TopViewImageSelector:
                         skipped_count += 1
 
                     if processed % 50 == 0:
-                        logger.info("Processed %d files so far in folder %s", processed, source_path)
+                        logger.info(
+                            "Processed %d files so far in folder %s",
+                            processed,
+                            source_path,
+                        )
 
                 logger.info(
                     "Look at '%s': copied %d images, skipped %d non-top-view images",
@@ -490,9 +510,7 @@ class TopViewImageSelector:
                     skipped_count,
                 )
 
-                logger.info(
-                    f"Top-view images copied to '{out_folder}'."
-                )
+                logger.info(f"Top-view images copied to '{out_folder}'.")
 
         csv_path = self.log_dir / predictions_out_file
 
