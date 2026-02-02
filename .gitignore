@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
@@ -31,3 +32,6 @@ models/*.joblib
 
 # Tests
 .pytest_cache/
+
+# Log Files
+logs/
