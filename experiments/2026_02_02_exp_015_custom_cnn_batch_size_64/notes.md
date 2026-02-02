@@ -8,6 +8,8 @@ Large batch → very smooth gradient
 
 The learning rate controls how big a step you take using that gradient.
 
+So larger batch sizes require proportionally higher learning rates to maintain gradient magnitude.
+
 ### batch size = 64
 - Faster convergence
 - Validation loss unstable after epoch 4
