@@ -12,3 +12,7 @@ The learning rate controls how big a step you take using that gradient.
 - Faster convergence
 - Validation loss unstable after epoch 4
 - Signs of sharp minima / overfitting
+- high gradient noise
+- larger variance in updates
+- loss spikes
+- accuracy jumps

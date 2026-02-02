@@ -12,3 +12,7 @@ The learning rate controls how big a step you take using that gradient.
 - Slower convergence
 - Validation loss unstable after epoch 3
 - Signs of sharp minima / overfitting
+- gradients are smoother
+- optimizer overshoots
+- oscillations instead of smooth descent
+- 
