@@ -5,7 +5,7 @@ procedure.
 
 # Data Preprocessing = Contrast Limited Adaptive Histogram Equalization (CLAHE)
 
-- training curve is stable, train accuracy approaching close to 100%
+- training curve is stable, train accuracy approaching very close to 100%
 - validation curve has slight fluctuations, but converges nicely and quickly
 - Shows a little overfitting
 
