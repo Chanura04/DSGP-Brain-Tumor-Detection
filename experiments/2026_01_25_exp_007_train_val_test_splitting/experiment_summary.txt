@@ -1,0 +1,2 @@
+Purpose: Splitting images of each datset into train/val/test sets
+Suitable for final training

@@ -8,13 +8,15 @@ This module provides:
 """
 
 from functools import wraps
-from typing import TypeVar, Callable, Any
+from typing import TypeVar, Callable, Any, ParamSpec
 import warnings
 import logging
 import time
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def deprecated(reason: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
@@ -62,18 +64,16 @@ def get_time(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-def log_calls(logger):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)
-            try:
-                result = func(*args, **kwargs)
-                logger.info("Returning %s: result=%r", func.__name__, result)
-                return result
-            except Exception:
-                logger.exception("Stopped %s: failed", func.__name__)
+def log_action(func: Callable[P, R]) -> Callable[P, R]:
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)
+        try:
+            result: R = func(*args, **kwargs)
+            logger.info("Returning %s: result=%r", func.__name__, result)
+            return result
+        except Exception:
+            logger.exception("Stopped %s: failed", func.__name__)
+            raise
 
-        return wrapper
-
-    return decorator
+    return wrapper
