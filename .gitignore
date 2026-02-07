@@ -4,7 +4,6 @@ __pycache__/
 *.pyo
 *.pyd
 
-
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
@@ -18,6 +17,10 @@ data/processed/**
 models/*.pkl
 models/*.h5
 models/*.joblib
+models/*.pt
+models/*.pth
+
+*.pth
 
 # Environment files
 .venv/
@@ -32,6 +35,3 @@ models/*.joblib
 
 # Tests
 .pytest_cache/
-
-# Log Files
-logs/
