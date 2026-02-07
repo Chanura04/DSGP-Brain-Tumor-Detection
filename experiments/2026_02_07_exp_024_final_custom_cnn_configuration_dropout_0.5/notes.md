@@ -9,5 +9,6 @@ procedure.
 - Accuracy curve and loss curves are stable
 - Still shows signs of overfitting
 - Gap between val-train is much smaller
+- better regularization
 
-These results indicate that better accuracy curves, shows the dropout layer of 0.5 has a major effect for the predictions.
+These results indicate that better accuracy curves, shows a higher dropout rate (0.5) significantly improves training stability and reduces overfitting by narrowing the train–validation performance gap.
