@@ -1,0 +1,58 @@
+{
+    "mri_dataset": {
+        "before_splitting": {
+            "total_images": 4545,
+            "folders": 2       
+        },
+        "after_splitting": {
+            "total_images": 4545,
+            "folders": 3
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    },
+
+    "ct_dataset": {
+        "before_splitting": {
+            "total_images": 3309,
+            "folders": 2
+        },
+        "after_splitting": {
+            "total_images": 3309,
+            "folders": 3
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    },
+
+    "segmentation_dataset": {
+        "before_splitting": {
+            "total_images": 12456,
+            "folders": 2
+        },
+        "after_splitting": {
+            "total_images": 12456,
+            "folders": 3
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    }
+}
