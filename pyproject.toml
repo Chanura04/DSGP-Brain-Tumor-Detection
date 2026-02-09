@@ -29,11 +29,6 @@ dependencies = [
     "nbformat>=4.5"
 ]
 
-# Tell the build system where to find your packages
-packages = [
-    { include = "src.*" }  # include everything under src as packages
-]
-
 [dependency-groups]
 dev = [
     "pytest==8.4.2",
