@@ -109,7 +109,9 @@ def test_copy_files(mover, tmp_path, monkeypatch):
     (src / "c.txt").write_text("x")
     (src / "d.jpeg").write_text("x")
 
-    monkeypatch.setattr("src.data.organizer.VALID_IMAGE_EXTENSIONS", {".png", ".jpg", ".jpeg"})
+    monkeypatch.setattr(
+        "src.data.organizer.VALID_IMAGE_EXTENSIONS", {".png", ".jpg", ".jpeg"}
+    )
 
     mover.copy_file = MagicMock(side_effect=[True, True, False])
     # simulates a copy_file environment,
