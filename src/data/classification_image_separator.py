@@ -52,6 +52,7 @@ from src.data.config import (
     DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
     DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
 )
+from src.utils.batching import create_batch
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class ClassificationImageSeparator(ImageSeparator):
                     and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
                 ]
 
-                for batches in ImageSeparator.batch(images, BATCH_SIZE):
+                for batches in create_batch(images, BATCH_SIZE):
                     futures: List[Future[bool]] = [
                         executor.submit(
                             self._process_single_image,

@@ -30,7 +30,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import final, Optional, cast, Generator, List
+from typing import final, Optional, cast
 from numpy.typing import NDArray
 
 from src.utils.decorators import get_time, log_action, deprecated
@@ -146,25 +146,6 @@ class ImageSeparator(ABC):
     @abstractmethod
     def process_images(self) -> None:
         pass
-
-    @staticmethod
-    def batch(iterable: List[Path], n: int) -> Generator[List[Path], None, None]:
-        """
-        Makes batches of the total images to reduce cpu overload,
-        memory usage and have control over certain operation.
-        e.g. to increase efficiency, reduce downtime, and improve consistency.
-
-        :param iterable: image list to make batches
-        :param n: number of images in a batch
-        """
-        batch_list: List[Path] = []
-        for item in iterable:
-            batch_list.append(item)
-            if len(batch_list) == n:
-                yield batch_list
-                batch_list = []
-        if batch_list:
-            yield batch_list
 
     @abstractmethod
     def filter_low_intensity_images(self) -> None:

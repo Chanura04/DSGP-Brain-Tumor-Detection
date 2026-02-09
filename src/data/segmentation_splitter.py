@@ -45,6 +45,7 @@ from src.data.base_splitter import BaseSplitter
 
 from src.utils.utils_config import RANDOM_SEED
 from src.data.config import MAX_WORKERS, BATCH_SIZE, DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
+from src.utils.batching import create_batch
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +233,7 @@ class SegmentationSplitter(BaseSplitter):
         processed = 0
 
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            for batches in BaseSplitter.batch(images, BATCH_SIZE):
+            for batches in create_batch(images, BATCH_SIZE):
                 futures = [
                     executor.submit(self.copy_image, folder_images, folder_masks, pair)
                     for pair in batches

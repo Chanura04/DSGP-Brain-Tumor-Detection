@@ -87,25 +87,6 @@ class BaseSplitter(ABC):
         out_folder.mkdir(parents=True, exist_ok=True)
         return out_folder
 
-    @staticmethod
-    def batch(iterable: List[T], n: int) -> Generator[List[T], None, None]:
-        """
-        Makes batches of the total images to reduce cpu overload,
-        memory usage and have control over certain operation.
-        e.g. to increase efficiency, reduce downtime, and improve consistency.
-
-        :param iterable: image list to make batches
-        :param n: number of images in a batch
-        """
-        batch_list: List[T] = []
-        for item in iterable:
-            batch_list.append(item)
-            if len(batch_list) == n:
-                yield batch_list
-                batch_list = []
-        if batch_list:
-            yield batch_list
-
     @log_action
     @get_time
     @abstractmethod

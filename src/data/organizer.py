@@ -51,6 +51,7 @@ from src.data.config import (
     MAX_WORKERS,
     BATCH_SIZE,
 )
+from src.utils.batching import create_batch
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class MoveImages:
                     else:
                         try:
                             shutil.copy2(image, dest_file)
-                        except Exception:
+                        except OSError:
                             logger.exception("Failed to copy %s: %s", image, dest_file)
                     copied_count += 1
                 else:
@@ -216,25 +217,6 @@ class MoveImages:
             logger.debug("Duplicate skipped: %s", src)
             return False
 
-    @staticmethod
-    def batch(iterable: List[Path], n: int) -> Generator[List[Path], None, None]:
-        """
-        Makes batches of the total images to reduce cpu overload,
-        memory usage and have control over certain operation.
-        e.g. to increase efficiency, reduce downtime, and improve consistency.
-
-        :param iterable: image list to make batches
-        :param n: number of images in a batch
-        """
-        batch_list: List[Path] = []
-        for item in iterable:
-            batch_list.append(item)
-            if len(batch_list) == n:
-                yield batch_list
-                batch_list = []
-        if batch_list:
-            yield batch_list
-
     def copy_files(self, src_folder: Path, dest_folder: Path, word: str) -> None:
         """
         Copy unique image files from a source folder to a destination folder concurrently.
@@ -254,7 +236,7 @@ class MoveImages:
         ]
 
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            for batches in MoveImages.batch(images, BATCH_SIZE):
+            for batches in create_batch(images, BATCH_SIZE):
                 futures = [
                     executor.submit(self.copy_file, img, dest_folder / img.name)
                     for img in batches
