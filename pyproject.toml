@@ -1,8 +1,8 @@
 [project]
-name = "dsgp_brain_tumor_detection"
+name = "dsgp-brain-tumor-detection"
 version = "0.1.0"
 description = "Brain Tumor Detection ML/DL Project"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.11"
 
 dependencies = [
     "numpy==2.0.2",
