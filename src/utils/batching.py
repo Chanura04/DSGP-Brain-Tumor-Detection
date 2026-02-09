@@ -1,6 +1,7 @@
 from typing import List, Generator
 from pathlib import Path
 
+
 def create_batch(iterable: List[Path], n: int) -> Generator[List[Path], None, None]:
     """
     Makes batches of the total images to reduce cpu overload,

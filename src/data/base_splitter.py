@@ -35,7 +35,7 @@ from src.utils.utils_config import RANDOM_SEED
 from src.utils.decorators import get_time, log_action
 from src.data.config import DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
-from typing import List, Generator, TypeVar
+from typing import List, TypeVar
 
 T = TypeVar("T")  # can be Path or Tuple[Path, Path]
 
