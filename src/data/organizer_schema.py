@@ -19,7 +19,7 @@ class MoveImagesConfig(BaseModel):
     :return: None
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid",)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     raw_dataset_path: Path
     interim_dataset_path: Path
@@ -75,5 +75,5 @@ class MoveImagesConfig(BaseModel):
     @model_validator(mode="after")
     def paths_match(self) -> "MoveImagesConfig":
         if self.raw_dataset_path.resolve() == self.interim_dataset_path.resolve():
-            raise ValueError("Raw Dataset path and Interim Dataset path cannot be the same")
+            raise ValueError("DatasetIntegrityError: raw and interim paths must differ")
         return self
