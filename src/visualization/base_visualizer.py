@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+from abc import ABC
 
 from typing import Tuple, Optional
 from matplotlib.figure import Figure
@@ -9,7 +10,7 @@ from matplotlib.axes import Axes
 import src.visualization.config as cfg
 
 
-class BaseVisualizer:
+class BaseVisualizer(ABC):
     def __init__(self, dataset_path: str = "", dataframe_path: str = ""):
         self.dataset_path: Path = Path(dataset_path)
         self.dataframe_path: Path = Path(dataframe_path)
