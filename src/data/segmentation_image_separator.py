@@ -57,6 +57,7 @@ from src.data.config import (
 )
 from src.utils.batching import create_batch
 
+from src.data.image_seperator_schema import SegmentationImageSeparatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -78,18 +79,10 @@ class SegmentationImageSeparator(ImageSeparator):
         apply_to (str): Mask path of the segmentation dataset
     """
 
-    def __init__(
-        self,
-        dataset_path: str,
-        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-        dry_run: bool = False,
-        source: str = DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
-        apply_to: str = DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
-    ):
-        super().__init__(dataset_path, lookfor, out, dry_run)
-        self.source = Path(source)
-        self.apply_to = Path(apply_to)
+    def __init__(self, config: SegmentationImageSeparatorConfig):
+        super().__init__(config.dataset_path, config.lookfor, config.out, config.dry_run)
+        self.source = config.source
+        self.apply_to = config.apply_to
 
     def process_images(self, source: str, apply_to: str) -> None:
         logger.error("Use filter_low_intensity_images instead")

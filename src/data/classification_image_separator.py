@@ -46,13 +46,11 @@ from typing import List
 
 from src.data.base_image_separator import ImageSeparator
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
-from src.data.config import (
-    MAX_WORKERS,
-    BATCH_SIZE,
-    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-)
+from src.data.config import MAX_WORKERS, BATCH_SIZE
+
 from src.utils.batching import create_batch
+
+from src.data.image_seperator_schema import ClassificationImageSeperatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +70,8 @@ class ClassificationImageSeparator(ImageSeparator):
         dry_run (bool): If True, simulate copying without writing files.
     """
 
-    def __init__(
-        self,
-        dataset_path: str,
-        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-        dry_run: bool = False,
-    ):
-        super().__init__(dataset_path, lookfor, out, dry_run)
+    def __init__(self, config: ClassificationImageSeperatorConfig):
+        super().__init__(config.dataset_path, config.lookfor, config.out, config.dry_run)
 
         self.source_folders: List[Path] = [
             f for f in self.dataset_path.iterdir() if f.is_dir()
@@ -190,7 +182,7 @@ class ClassificationImageSeparator(ImageSeparator):
                     image
                     for image in source_path.glob("*")
                     if image.is_file()
-                    and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
+                       and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
                 ]
 
                 for batches in create_batch(images, BATCH_SIZE):

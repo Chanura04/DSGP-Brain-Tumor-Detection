@@ -4,9 +4,9 @@ ImageSeparator Module
 This module provides the `ImageSeparator` abstract class, which is designed to filter out / copy
 low intensity images of the organized raw dataset to an interim dataset. It supports:
 
-- Filtering images by a the mean threshold/ mean intensity of the image.
-- Filtering images by a the bright pixel ratio of the image.
-- Filtering images by a the max brightness of the image.
+- Filtering images by the mean threshold/ mean intensity of the image.
+- Filtering images by the bright pixel ratio of the image.
+- Filtering images by the max brightness of the image.
 - Copying only valid image extensions.
 - Logging progress, duplicates, and summary information.
 - Dry-run mode to simulate file operations without writing files.
@@ -48,19 +48,19 @@ class ImageSeparator(ABC):
     """
     An abstract class to filter out low intensity image files from an original raw dataset to an interim dataset.
 
-    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    This class supports filtering by mean intensity, brightness and bright pixel ratio, copying only valid image
     extensions, logging progress, and dry-run mode for testing.
 
     Attributes:
         dataset_path (Path): Path to the original raw dataset folder.
-        lookfor (str): A folder name or class to process.
+        source_word (str): A folder name or class to process.
         out (str): Subdirectory name for the filtered output.
         dry_run (bool): If True, simulate copying without writing files.
     """
 
     def __init__(
         self,
-        dataset_path: str,
+        dataset_path: Path,
         lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
         out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
         dry_run: bool = False,
@@ -85,10 +85,10 @@ class ImageSeparator(ABC):
         It's what gets shown when you print the object or convert it to a string.
         :return: a user-friendly representation of the object
         """
-        return f"Seperating Low Intensity Images from {self.dataset_path} to {self.out} (dry_run={self.dry_run})"
+        return f"Separating Low Intensity Images from {self.dataset_path} to {self.out} (dry_run={self.dry_run})"
 
-    @get_time
     @staticmethod
+    @get_time
     @final
     def is_mostly_black(
         img_path: Path,
