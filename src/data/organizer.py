@@ -45,13 +45,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 from src.utils.decorators import get_time, log_action, deprecated
-from src.data.config import (
-    DEFAULT_INCLUDE_MODE,
-    DEFAULT_ORGANIZE_OUTPUT_DIR_NAME,
-    MAX_WORKERS,
-    BATCH_SIZE,
-)
+from src.data.config import MAX_WORKERS, BATCH_SIZE
 from src.utils.batching import create_batch
+
+from src.data.organizer_schema import MoveImagesConfig
 
 logger = logging.getLogger(__name__)
 
@@ -72,31 +69,18 @@ class MoveImages:
         dry_run (bool): If True, simulate copying without writing files.
     """
 
-    def __init__(
-        self,
-        raw_dataset_path: str,
-        interim_dataset_path: str,
-        lookfor: List[str],
-        out: str = DEFAULT_ORGANIZE_OUTPUT_DIR_NAME,
-        include: bool = DEFAULT_INCLUDE_MODE,
-        dry_run: bool = False,
-    ) -> None:
+    def __init__(self, config: MoveImagesConfig) -> None:
         """
         Initialize the MoveImages instance.
-        :param raw_dataset_path: Path to the raw dataset folder.
-        :param interim_dataset_path: Path to the interim dataset folder.
-        :param lookfor: List of folder names or classes to process.
-        :param out: Name of output subdirectory. Defaults to DEFAULT_OUTPUT_DIR_NAME.
-        :param include: If True, include subfolders matching folder names. Defaults to DEFAULT_INCLUDE_MODE.
-        :param dry_run: If True, simulate copying without writing files. Defaults to False.
-        :return: None
         """
-        self.raw_dataset_path: Path = Path(raw_dataset_path)
-        self.interim_dataset_path: Path = Path(interim_dataset_path)
-        self.lookfor: List[str] = lookfor
-        self.out: str = out
-        self.include: bool = include
-        self.dry_run = dry_run
+        self.raw_dataset_path: Path = config.raw_dataset_path
+        self.interim_dataset_path: Path = config.interim_dataset_path
+        self.lookfor: List[str] = config.lookfor
+        self.out: str = config.out
+        self.include: bool = config.include
+        self.dry_run = config.dry_run
+
+        logger.info("MoveImages initialized with config: %s", config.model_dump())
 
     def __repr__(self) -> str:
         """
