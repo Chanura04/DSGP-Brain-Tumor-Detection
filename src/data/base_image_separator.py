@@ -59,25 +59,16 @@ class ImageSeparator(ABC):
     """
 
     def __init__(
-        self,
-        dataset_path: Path,
-        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-        dry_run: bool = False,
+            self,
+            dataset_path: Path,
+            lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
+            out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
+            dry_run: bool = False,
     ):
         self.dataset_path: Path = Path(dataset_path)
         self.lookfor: str = lookfor
         self.out = out
         self.dry_run = dry_run
-
-    def __repr__(self) -> str:
-        """
-        __repr__ is meant to provide an unambiguous string representation of the object.
-        It's often for debugging and should ideally return a string that could be used
-        to recreate the object.
-        :return: a developer friendly representation of the object
-        """
-        return f"ImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out})"
 
     def __str__(self) -> str:
         """
@@ -91,9 +82,9 @@ class ImageSeparator(ABC):
     @get_time
     @final
     def is_mostly_black(
-        img_path: Path,
-        mean_thresh: int = MEAN_THRESHOLD,
-        bright_pixel_ratio: float = BRIGHT_PIXEL_RATIO,
+            img_path: Path,
+            mean_thresh: int = MEAN_THRESHOLD,
+            bright_pixel_ratio: float = BRIGHT_PIXEL_RATIO,
     ) -> bool:
         """
         Determines whether an image is predominantly black or very dark.

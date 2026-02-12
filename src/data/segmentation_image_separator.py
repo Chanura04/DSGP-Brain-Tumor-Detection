@@ -77,12 +77,21 @@ class SegmentationImageSeparator(ImageSeparator):
         self.source = config.source
         self.apply_to = config.apply_to
 
+    def __repr__(self) -> str:
+        """
+        __repr__ is meant to provide an unambiguous string representation of the object.
+        It's often for debugging and should ideally return a string that could be used
+        to recreate the object.
+        :return: a developer friendly representation of the object
+        """
+        return f"SegmentationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out}, source={self.source}, apply_to={self.apply_to})"
+
     def process_images(self, source: str, apply_to: str) -> None:
         logger.error("Use filter_low_intensity_images instead")
         raise NotImplementedError("Use filter_low_intensity_images instead")
 
     def _process_pair_images(
-        self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
+            self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
     ) -> bool:
         """
         Process a pair of images (image and corresponding mask) by filtering low-intensity images

@@ -77,6 +77,15 @@ class ClassificationImageSeparator(ImageSeparator):
             f for f in self.dataset_path.iterdir() if f.is_dir()
         ]
 
+    def __repr__(self) -> str:
+        """
+        __repr__ is meant to provide an unambiguous string representation of the object.
+        It's often for debugging and should ideally return a string that could be used
+        to recreate the object.
+        :return: a developer friendly representation of the object
+        """
+        return f"ClassificationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out})"
+
     def process_images(self) -> None:
         for source in self.source_folders:
             source_path: Path = Path(source) / self.lookfor
