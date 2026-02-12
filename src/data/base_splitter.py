@@ -77,11 +77,11 @@ class BaseSplitter(ABC):
     @log_action
     def make_directory(self, base_path: Path, subfolder: str) -> Path:
         """
-        Create the splitted directory in the interim dataset.
+        Create the separated directory in the interim dataset.
         If the directory already exists, it does nothing.
         :param base_path: Base folder where the subdirectory will be created.
         :param subfolder: Name of the subdirectory to create.
-        :return: Full path to the splitted directory.
+        :return: Full path to the separated directory.
         """
         out_folder = base_path / subfolder
         out_folder.mkdir(parents=True, exist_ok=True)

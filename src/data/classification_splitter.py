@@ -90,7 +90,7 @@ class ClassificationSplitter(BaseSplitter):
             try:
                 shutil.copy2(image, folder)
                 return True
-            except Exception:
+            except OSError:
                 logger.exception("Failed to copy %s: %s", image, folder)
                 return False
 

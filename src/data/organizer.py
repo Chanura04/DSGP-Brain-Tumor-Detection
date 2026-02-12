@@ -194,7 +194,7 @@ class MoveImages:
                 try:
                     shutil.copy2(src, dest)
                     return True
-                except Exception:
+                except OSError:
                     logger.exception("Failed to copy %s: %s", src, dest)
                     return False
         else:

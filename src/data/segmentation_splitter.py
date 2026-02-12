@@ -106,7 +106,7 @@ class SegmentationSplitter(BaseSplitter):
                 shutil.copy2(image, folder_images)
                 shutil.copy2(mask, folder_masks)
                 return True
-            except Exception:
+            except OSError:
                 logger.exception(
                     "Failed to copy %s: %s and %s: %s",
                     image,

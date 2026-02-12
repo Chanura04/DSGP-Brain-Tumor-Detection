@@ -4,9 +4,9 @@ SegmentationImageSeparator Module
 This module provides the `SegmentationImageSeparator` concrete class, which is designed to filter out / copy
 low intensity images of a segmentation dataset of the organized raw dataset to an interim dataset. It supports:
 
-- Filtering images by a the mean threshold/ mean intensity of the image.
-- Filtering images by a the bright pixel ratio of the image.
-- Filtering images by a the max brightness of the image.
+- Filtering images by the mean threshold/ mean intensity of the image.
+- Filtering images by the bright pixel ratio of the image.
+- Filtering images by the max brightness of the image.
 - Copying only valid image extensions.
 - Logging progress, duplicates, and summary information.
 - Dry-run mode to simulate file operations without writing files.
@@ -47,14 +47,7 @@ import logging
 
 from src.data.base_image_separator import ImageSeparator
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
-from src.data.config import (
-    MAX_WORKERS,
-    BATCH_SIZE,
-    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-    DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
-    DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
-)
+from src.data.config import MAX_WORKERS, BATCH_SIZE
 from src.utils.batching import create_batch
 
 from src.data.image_seperator_schema import SegmentationImageSeparatorConfig
@@ -125,7 +118,7 @@ class SegmentationImageSeparator(ImageSeparator):
                     shutil.copy2(img_mask, dest_mask)
                     return False  # copied
 
-            except Exception:
+            except OSError:
                 logger.exception("File processing failed")
                 return True
 

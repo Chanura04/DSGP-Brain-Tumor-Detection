@@ -4,9 +4,9 @@ ClassificationImageSeparator Module
 This module provides the `ClassificationImageSeparator` concrete class, which is designed to filter out / copy
 low intensity images of a classification dataset of the organized raw dataset to an interim dataset. It supports:
 
-- Filtering images by a the mean threshold/ mean intensity of the image.
-- Filtering images by a the bright pixel ratio of the image.
-- Filtering images by a the max brightness of the image.
+- Filtering images by the mean threshold/ mean intensity of the image.
+- Filtering images by the bright pixel ratio of the image.
+- Filtering images by the max brightness of the image.
 - Copying only valid image extensions.
 - Logging progress, duplicates, and summary information.
 - Dry-run mode to simulate file operations without writing files.
@@ -50,7 +50,7 @@ from src.data.config import MAX_WORKERS, BATCH_SIZE
 
 from src.utils.batching import create_batch
 
-from src.data.image_seperator_schema import ClassificationImageSeperatorConfig
+from src.data.image_seperator_schema import ClassificationImageSeparatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class ClassificationImageSeparator(ImageSeparator):
     A concrete class to filter out low intensity image files of a classification dataset from an original raw
     dataset to an interim dataset.
 
-    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    This class supports filtering by mean intensity, brightness and bright pixel ratio, copying only valid image
     extensions, logging progress, and dry-run mode for testing.
 
     Attributes:
@@ -70,7 +70,7 @@ class ClassificationImageSeparator(ImageSeparator):
         dry_run (bool): If True, simulate copying without writing files.
     """
 
-    def __init__(self, config: ClassificationImageSeperatorConfig):
+    def __init__(self, config: ClassificationImageSeparatorConfig):
         super().__init__(config.dataset_path, config.lookfor, config.out, config.dry_run)
 
         self.source_folders: List[Path] = [
@@ -135,7 +135,7 @@ class ClassificationImageSeparator(ImageSeparator):
             else:
                 shutil.copy2(img, dest)
                 return False  # copied
-        except Exception:
+        except OSError:
             logger.exception("File processing failed")
             return True
 
