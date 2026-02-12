@@ -1,16 +1,17 @@
 from pathlib import Path
 from PIL import Image
 from src.data.organizer import MoveImages
+from src.data.organizer_schema import MoveImagesConfig
 
 import pytest
 from unittest.mock import MagicMock
 
 
 @pytest.fixture()
-def mover():
-    return MoveImages(
-        raw_dataset_path="raw",
-        interim_dataset_path="interim",
+def mover_config():
+    return MoveImagesConfig(
+        raw_dataset_path="data/raw",
+        interim_dataset_path="data/interim",
         lookfor=["glioma", "pituitary"],
         out="original",
         include=False,
@@ -18,9 +19,14 @@ def mover():
     )
 
 
+@pytest.fixture()
+def mover(mover_config):
+    return MoveImages(mover_config)
+
+
 def test_init(mover):
-    assert mover.raw_dataset_path == Path("raw")
-    assert mover.interim_dataset_path == Path("interim")
+    assert mover.raw_dataset_path == Path("data/raw").resolve()
+    assert mover.interim_dataset_path == Path("data/interim").resolve()
     assert mover.lookfor == ["glioma", "pituitary"]
     assert mover.out == "original"
     assert mover.include is False
