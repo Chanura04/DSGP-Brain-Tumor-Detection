@@ -24,7 +24,7 @@ class MoveImagesConfig(BaseModel):
     raw_dataset_path: Path
     interim_dataset_path: Path
     lookfor: Annotated[List[str], Field(min_length=1)]
-    out: str = DEFAULT_ORGANIZE_OUTPUT_DIR_NAME
+    out: Annotated[str, Field(min_length=1)] = DEFAULT_ORGANIZE_OUTPUT_DIR_NAME
     include: bool = DEFAULT_INCLUDE_MODE
     dry_run: bool = False
 
@@ -73,7 +73,7 @@ class MoveImagesConfig(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def paths_match(self) -> "MoveImagesConfig":
+    def check_paths_match(self) -> "MoveImagesConfig":
         if self.raw_dataset_path.resolve() == self.interim_dataset_path.resolve():
             raise ValueError("DatasetIntegrityError: raw and interim paths must differ")
         return self
