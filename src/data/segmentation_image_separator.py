@@ -60,7 +60,7 @@ class SegmentationImageSeparator(ImageSeparator):
     A concrete class to filter out low intensity image files of a segmentation dataset from an original raw
     dataset to an interim dataset.
 
-    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    This class supports filtering by mean intensity, brightness and bright pixel ratio, copying only valid image
     extensions, logging progress, and dry-run mode for testing.
 
     Attributes:
@@ -131,7 +131,7 @@ class SegmentationImageSeparator(ImageSeparator):
 
         Workflow:
             1. Determines source and output folders based on `self.dataset_path`, `self.source`,
-            `self.apply_to`, and `self.source_word`.
+            `self.apply_to`, and `self.lookfor`.
             2. Skips processing if the source folder does not exist or if the source and destination
             paths are the same.
             3. Collects all valid image files (based on `VALID_IMAGE_EXTENSIONS`) from the source folder.
@@ -146,11 +146,11 @@ class SegmentationImageSeparator(ImageSeparator):
         """
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
-            source_path: Path = self.dataset_path / self.source / self.source_word
+            source_path: Path = self.dataset_path / self.source / self.lookfor
 
             if not source_path.exists():
                 logger.debug(
-                    "Skipping (no '%s' folder): %s", self.source_word, source_path
+                    "Skipping (no '%s' folder): %s", self.lookfor, source_path
                 )
 
             out_folder: Path = self.make_directory(self.source)
@@ -158,7 +158,7 @@ class SegmentationImageSeparator(ImageSeparator):
             if source_path.resolve() == out_folder.resolve():
                 logger.debug("Source and destination are the same, skipping")
 
-            apply_path: Path = self.dataset_path / self.apply_to / self.source_word
+            apply_path: Path = self.dataset_path / self.apply_to / self.lookfor
             out_apply_to: Path = self.make_directory(self.apply_to)
 
             logger.info("Processing from: %s", source_path)
@@ -204,7 +204,7 @@ class SegmentationImageSeparator(ImageSeparator):
 
             logger.info(
                 "Look at '%s': copied %d images, removed %d mostly black images",
-                self.source_word,
+                self.lookfor,
                 copied_count,
                 removed_count,
             )

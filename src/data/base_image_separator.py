@@ -53,7 +53,7 @@ class ImageSeparator(ABC):
 
     Attributes:
         dataset_path (Path): Path to the original raw dataset folder.
-        source_word (str): A folder name or class to process.
+        lookfor (str): A folder name or class to process.
         out (str): Subdirectory name for the filtered output.
         dry_run (bool): If True, simulate copying without writing files.
     """
@@ -66,7 +66,7 @@ class ImageSeparator(ABC):
         dry_run: bool = False,
     ):
         self.dataset_path: Path = Path(dataset_path)
-        self.source_word: str = lookfor
+        self.lookfor: str = lookfor
         self.out = out
         self.dry_run = dry_run
 
@@ -77,7 +77,7 @@ class ImageSeparator(ABC):
         to recreate the object.
         :return: a developer friendly representation of the object
         """
-        return f"ImageSeparator(dataset_path={self.dataset_path}, source_word={self.source_word}, out={self.out})"
+        return f"ImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out})"
 
     def __str__(self) -> str:
         """

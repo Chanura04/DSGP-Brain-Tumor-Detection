@@ -79,11 +79,11 @@ class ClassificationImageSeparator(ImageSeparator):
 
     def process_images(self) -> None:
         for source in self.source_folders:
-            source_path: Path = Path(source) / self.source_word
+            source_path: Path = Path(source) / self.lookfor
 
             if not source_path.exists():
                 logger.debug(
-                    "Skipping (no '%s' folder): %s", self.source_word, source_path
+                    "Skipping (no '%s' folder): %s", self.lookfor, source_path
                 )
                 continue
 
@@ -157,11 +157,11 @@ class ClassificationImageSeparator(ImageSeparator):
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
             for source in self.source_folders:
-                source_path: Path = Path(source) / self.source_word
+                source_path: Path = Path(source) / self.lookfor
 
                 if not source_path.exists():
                     logger.debug(
-                        "Skipping (no '%s' folder): %s", self.source_word, source_path
+                        "Skipping (no '%s' folder): %s", self.lookfor, source_path
                     )
                     continue
 
@@ -211,7 +211,7 @@ class ClassificationImageSeparator(ImageSeparator):
 
                 logger.info(
                     "Look at '%s': copied %d images, removed %d mostly black images",
-                    self.source_word,
+                    self.lookfor,
                     copied_count,
                     removed_count,
                 )
