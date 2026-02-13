@@ -141,7 +141,7 @@ class ClassificationImageSeparator(ImageSeparator):
                     )
                     continue
 
-                out_folder: Path = self.make_directory(source)
+                out_folder: Path = ImageSeparator.make_directory(source)
 
                 logger.info("Processing from: %s", source_path)
                 logger.info("Outputting to: %s", out_folder)
