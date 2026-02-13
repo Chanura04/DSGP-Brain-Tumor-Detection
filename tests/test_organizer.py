@@ -10,8 +10,8 @@ from unittest.mock import MagicMock
 @pytest.fixture()
 def mover_config():
     return MoveImagesConfig(
-        raw_dataset_path="data/raw",
-        interim_dataset_path="data/interim",
+        raw_dataset_path="data/raw/mri",
+        interim_dataset_path="data/interim/mri",
         lookfor=["glioma", "pituitary"],
         out="original",
         include=False,
@@ -25,8 +25,8 @@ def mover(mover_config):
 
 
 def test_init(mover):
-    assert mover.raw_dataset_path == Path("data/raw").resolve()
-    assert mover.interim_dataset_path == Path("data/interim").resolve()
+    assert mover.raw_dataset_path == Path("data/raw/mri").resolve()
+    assert mover.interim_dataset_path == Path("data/interim/mri").resolve()
     assert mover.lookfor == ["glioma", "pituitary"]
     assert mover.out == "original"
     assert mover.include is False
