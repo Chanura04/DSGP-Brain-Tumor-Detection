@@ -86,10 +86,6 @@ class SegmentationImageSeparator(ImageSeparator):
         """
         return f"SegmentationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out}, source={self.source}, apply_to={self.apply_to})"
 
-    def process_images(self, source: str, apply_to: str) -> None:
-        logger.error("Use filter_low_intensity_images instead")
-        raise NotImplementedError("Use filter_low_intensity_images instead")
-
     def _process_pair_images(
             self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
     ) -> bool:

@@ -134,7 +134,6 @@ class ImageSeparator(ABC):
     @deprecated("Use filter_low_intensity_images instead")
     @log_action
     @get_time
-    @abstractmethod
     def process_images(self) -> None:
         pass
 

@@ -86,39 +86,6 @@ class ClassificationImageSeparator(ImageSeparator):
         """
         return f"ClassificationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out})"
 
-    def process_images(self) -> None:
-        for source in self.source_folders:
-            source_path: Path = Path(source) / self.lookfor
-
-            if not source_path.exists():
-                logger.debug(
-                    "Skipping (no '%s' folder): %s", self.lookfor, source_path
-                )
-                continue
-
-            out_folder: Path = self.make_directory(source)
-
-            logger.info("Processing from: %s", source_path)
-            logger.info("Outputting to: %s", out_folder)
-
-            if source_path.resolve() == Path(out_folder).resolve():
-                logger.debug("Source and destination are the same, skipping")
-                continue
-
-            # Process all images in source folder
-            count_total: int = 0
-            count_removed: int = 0
-            for image in source_path.glob("*.*"):
-                if image.is_file() and image.suffix.lower() in VALID_IMAGE_EXTENSIONS:
-                    count_total += 1
-                    if ClassificationImageSeparator.is_mostly_black(img_path=image):
-                        count_removed += 1
-            logger.info(
-                "Processed %d images, removed %d mostly black images.",
-                count_total,
-                count_removed,
-            )
-
     def _process_single_image(self, img: Path, dest: Path) -> bool:
         """
         Process a single image by checking its intensity and optionally copying it.
