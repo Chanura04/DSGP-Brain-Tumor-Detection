@@ -117,7 +117,7 @@ class ImageSeparator(ABC):
         ratio: float = bright_pixels / img.size
 
         # Mostly black if mean very low OR almost all pixels are dark
-        return mean_intensity < mean_thresh or ratio < bright_pixel_ratio
+        return bool(mean_intensity < mean_thresh or ratio < bright_pixel_ratio)
 
     @log_action
     def make_directory(self, name: Path) -> Path:
