@@ -35,4 +35,6 @@ models/*.pth
 
 # Tests
 .pytest_cache/
+
+htmlcov/
 .coverage
