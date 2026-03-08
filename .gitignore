@@ -19,6 +19,7 @@ models/*.h5
 models/*.joblib
 models/*.pt
 models/*.pth
+models/*.keras
 
 *.pth
 
