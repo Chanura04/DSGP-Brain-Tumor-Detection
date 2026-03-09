@@ -1,11 +1,8 @@
-import base64
-
 from tensorflow.keras.models import load_model
 import tensorflow as tf
 import numpy as np
 import io
 from PIL import Image
-import cv2
 import torch
 from torch import nn
 import yaml
@@ -15,9 +12,7 @@ from tensorflow.keras import backend
 from tensorflow.keras.layers import Conv2DTranspose
 import cv2
 
-HEAD_DETECTION_IMG_SIZE = (128, 128)
-CT_MRI_TUMOR_IMG_SIZE = (224, 224)
-SEGMENTATION_TUMOR_IMG_SIZE = (256, 256)
+from src.utils.image_utils import HEAD_DETECTION_IMG_SIZE, CT_MRI_TUMOR_IMG_SIZE, SEGMENTATION_TUMOR_IMG_SIZE
 
 axial_view_detection_ct_model = load_model("models/axial_view_detection_ct_model.keras")
 axial_view_detection_mri_model = load_model("models/axial_view_detection_mri_model.keras")
