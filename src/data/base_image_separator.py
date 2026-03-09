@@ -26,22 +26,11 @@ This module is useful for preparing datasets for machine learning, ensuring that
 only valid images are copied and that file operations are tracked.
 """
 
-import cv2
-import numpy as np
 from pathlib import Path
 from abc import ABC, abstractmethod
-from typing import final, Optional, cast
-from numpy.typing import NDArray
 
 from src.utils.decorators import get_time, log_action, deprecated
-
-from src.data.config import (
-    MEAN_THRESHOLD,
-    BRIGHT_PIXEL_RATIO,
-    MAX_BRIGHTNESS,
-    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-)
+from src.data.config import DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME, DEFAULT_SEPARATOR_OUTPUT_DIR_NAME
 
 
 class ImageSeparator(ABC):
@@ -77,47 +66,6 @@ class ImageSeparator(ABC):
         :return: a user-friendly representation of the object
         """
         return f"Separating Low Intensity Images from {self.dataset_path} to {self.out} (dry_run={self.dry_run})"
-
-    @staticmethod
-    @get_time
-    @final
-    def is_mostly_black(
-            img_path: Path,
-            mean_thresh: int = MEAN_THRESHOLD,
-            bright_pixel_ratio: float = BRIGHT_PIXEL_RATIO,
-    ) -> bool:
-        """
-        Determines whether an image is predominantly black or very dark.
-
-        This method reads an image in grayscale, calculates the mean pixel intensity,
-        and checks the proportion of bright pixels. An image is considered "mostly black"
-        if either:
-          1. The mean intensity is below `mean_thresh`, or
-          2. The ratio of pixels brighter than a threshold (`MAX_BRIGHTNESS`) is less than `bright_pixel_ratio`.
-
-          :param img_path: Path to the image file.
-          :param mean_thresh: The mean intensity threshold below which the image is
-          considered mostly black. Defaults to `MEAN_THRESHOLD`.
-          :param bright_pixel_ratio: Maximum allowed ratio of bright pixels for the
-          image to be considered mostly black. Defaults to `BRIGHT_PIXEL_RATIO`.
-          :return: True if the image is mostly black or if reading the image fails, False otherwise.
-        """
-        img = cast(
-            Optional[NDArray[np.generic]],
-            cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE),
-        )
-        if img is None:
-            return True  # Image reading failed
-
-        mean_intensity: float = img.mean()
-
-        # Ratio of pixels brighter than 50 (adjustable)
-        img = cast(NDArray[np.uint8], img)
-        bright_pixels: int = int(np.sum(img > MAX_BRIGHTNESS))
-        ratio: float = bright_pixels / img.size
-
-        # Mostly black if mean very low OR almost all pixels are dark
-        return bool(mean_intensity < mean_thresh or ratio < bright_pixel_ratio)
 
     @log_action
     def make_directory(self, name: Path) -> Path:

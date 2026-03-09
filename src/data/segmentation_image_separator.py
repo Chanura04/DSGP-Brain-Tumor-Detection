@@ -49,6 +49,7 @@ from src.data.base_image_separator import ImageSeparator
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 from src.data.config import MAX_WORKERS, BATCH_SIZE
 from src.utils.batching import create_batch
+from src.utils.image_utils import is_mostly_black
 
 from src.data.image_seperator_schema import SegmentationImageSeparatorConfig
 
@@ -110,7 +111,7 @@ class SegmentationImageSeparator(ImageSeparator):
         """
         if img_mask.exists():
             try:
-                if ImageSeparator.is_mostly_black(img):
+                if is_mostly_black(img):
                     return True  # removed
 
                 if self.dry_run:

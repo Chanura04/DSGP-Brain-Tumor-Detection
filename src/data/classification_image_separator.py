@@ -49,6 +49,7 @@ from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 from src.data.config import MAX_WORKERS, BATCH_SIZE
 
 from src.utils.batching import create_batch
+from src.utils.image_utils import is_mostly_black
 
 from src.data.image_seperator_schema import ClassificationImageSeparatorConfig
 
@@ -102,7 +103,7 @@ class ClassificationImageSeparator(ImageSeparator):
         returns: True if the image was removed (mostly black or failed), False if it was copied or dry-run logged.
         """
         try:
-            if ImageSeparator.is_mostly_black(img):
+            if is_mostly_black(img):
                 return True  # removed
 
             if self.dry_run:
