@@ -11,16 +11,16 @@ Constants:
 
 from typing import Final, Tuple, List
 
-# organize.py
 DEFAULT_INCLUDE_MODE: Final[bool] = False
 DEFAULT_ORGANIZE_OUTPUT_DIR_NAME: Final[str] = "original"
 
 MAX_WORKERS: Final[int] = 20
 BATCH_SIZE: Final[int] = 1000
 
-# base_image_seperator.py
-MEAN_THRESHOLD: Final[int] = 10
-BRIGHT_PIXEL_RATIO: Final[float] = 0.2
+MEAN_BLACK_THRESHOLD: Final[int] = 10
+BRIGHT_BLACK_PIXEL_RATIO: Final[float] = 0.2
+MEAN_WHITE_THRESHOLD: Final[int] = 240
+BRIGHT_WHITE_PIXEL_RATIO: Final[float] = 0.8
 MAX_BRIGHTNESS: Final[int] = 50
 
 DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME: Final[str] = "original"
