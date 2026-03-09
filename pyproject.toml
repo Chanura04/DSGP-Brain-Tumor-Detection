@@ -28,6 +28,7 @@ dependencies = [
     "rich==13.9.4",
     "nbformat>=4.5",
     "pytest-cov>=7.0.0",
+    "keras>=3.13.2",
 ]
 
 [dependency-groups]
