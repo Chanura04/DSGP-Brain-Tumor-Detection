@@ -12,6 +12,7 @@
 This project aims to build a machine learning model that predict Brain Tumors and Segment the tumor. We follow best practices in reproducible data science with a modular codebase, automated testing, and experiment tracking.
 
 ---
+![c285d8a7-95bb-4416-819a-386bfb0617e7](https://github.com/user-attachments/assets/b53f58bd-d015-4865-87b3-70493225f4b0)
 
 ## 📁 Repository Structure
 
