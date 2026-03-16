@@ -129,9 +129,5 @@ st.markdown("""
 3. Click the "Check for Tumor" button to start the analysis
 4. View the detection results and segmentation output
 
-<<<<<<< HEAD
-
-=======
 **Note:** Replace the mock prediction functions with your actual trained models.
->>>>>>> master
 """)
