@@ -4,9 +4,9 @@ SegmentationImageSeparator Module
 This module provides the `SegmentationImageSeparator` concrete class, which is designed to filter out / copy
 low intensity images of a segmentation dataset of the organized raw dataset to an interim dataset. It supports:
 
-- Filtering images by a the mean threshold/ mean intensity of the image.
-- Filtering images by a the bright pixel ratio of the image.
-- Filtering images by a the max brightness of the image.
+- Filtering images by the mean threshold/ mean intensity of the image.
+- Filtering images by the bright pixel ratio of the image.
+- Filtering images by the max brightness of the image.
 - Copying only valid image extensions.
 - Logging progress, duplicates, and summary information.
 - Dry-run mode to simulate file operations without writing files.
@@ -47,15 +47,11 @@ import logging
 
 from src.data.base_image_separator import ImageSeparator
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
-from src.data.config import (
-    MAX_WORKERS,
-    BATCH_SIZE,
-    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-    DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
-    DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
-)
+from src.data.config import MAX_WORKERS, BATCH_SIZE
+from src.utils.batching import create_batch
+from src.utils.image_utils import is_mostly_black
 
+from src.data.image_seperator_schema import SegmentationImageSeparatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +61,7 @@ class SegmentationImageSeparator(ImageSeparator):
     A concrete class to filter out low intensity image files of a segmentation dataset from an original raw
     dataset to an interim dataset.
 
-    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    This class supports filtering by mean intensity, brightness and bright pixel ratio, copying only valid image
     extensions, logging progress, and dry-run mode for testing.
 
     Attributes:
@@ -77,25 +73,22 @@ class SegmentationImageSeparator(ImageSeparator):
         apply_to (str): Mask path of the segmentation dataset
     """
 
-    def __init__(
-        self,
-        dataset_path: str,
-        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-        dry_run: bool = False,
-        source: str = DEFAULT_SEPARATOR_SOURCE_DIR_NAME,
-        apply_to: str = DEFAULT_SEPARATOR_APPLY_TO_DIR_NAME,
-    ):
-        super().__init__(dataset_path, lookfor, out, dry_run)
-        self.source = Path(source)
-        self.apply_to = Path(apply_to)
+    def __init__(self, config: SegmentationImageSeparatorConfig):
+        super().__init__(config.dataset_path, config.lookfor, config.out, config.dry_run)
+        self.source = config.source
+        self.apply_to = config.apply_to
 
-    def process_images(self, source: str, apply_to: str) -> None:
-        logger.error("Use filter_low_intensity_images instead")
-        raise NotImplementedError("Use filter_low_intensity_images instead")
+    def __repr__(self) -> str:
+        """
+        __repr__ is meant to provide an unambiguous string representation of the object.
+        It's often for debugging and should ideally return a string that could be used
+        to recreate the object.
+        :return: a developer friendly representation of the object
+        """
+        return f"SegmentationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out}, source={self.source}, apply_to={self.apply_to})"
 
     def _process_pair_images(
-        self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
+            self, img: Path, img_mask: Path, dest: Path, dest_mask: Path
     ) -> bool:
         """
         Process a pair of images (image and corresponding mask) by filtering low-intensity images
@@ -118,7 +111,7 @@ class SegmentationImageSeparator(ImageSeparator):
         """
         if img_mask.exists():
             try:
-                if ImageSeparator.is_mostly_black(img):
+                if is_mostly_black(img):
                     return True  # removed
 
                 if self.dry_run:
@@ -131,7 +124,7 @@ class SegmentationImageSeparator(ImageSeparator):
                     shutil.copy2(img_mask, dest_mask)
                     return False  # copied
 
-            except Exception:
+            except OSError:
                 logger.exception("File processing failed")
                 return True
 
@@ -144,7 +137,7 @@ class SegmentationImageSeparator(ImageSeparator):
 
         Workflow:
             1. Determines source and output folders based on `self.dataset_path`, `self.source`,
-            `self.apply_to`, and `self.source_word`.
+            `self.apply_to`, and `self.lookfor`.
             2. Skips processing if the source folder does not exist or if the source and destination
             paths are the same.
             3. Collects all valid image files (based on `VALID_IMAGE_EXTENSIONS`) from the source folder.
@@ -159,11 +152,11 @@ class SegmentationImageSeparator(ImageSeparator):
         """
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
-            source_path: Path = self.dataset_path / self.source / self.source_word
+            source_path: Path = self.dataset_path / self.source / self.lookfor
 
             if not source_path.exists():
                 logger.debug(
-                    "Skipping (no '%s' folder): %s", self.source_word, source_path
+                    "Skipping (no '%s' folder): %s", self.lookfor, source_path
                 )
 
             out_folder: Path = self.make_directory(self.source)
@@ -171,7 +164,7 @@ class SegmentationImageSeparator(ImageSeparator):
             if source_path.resolve() == out_folder.resolve():
                 logger.debug("Source and destination are the same, skipping")
 
-            apply_path: Path = self.dataset_path / self.apply_to / self.source_word
+            apply_path: Path = self.dataset_path / self.apply_to / self.lookfor
             out_apply_to: Path = self.make_directory(self.apply_to)
 
             logger.info("Processing from: %s", source_path)
@@ -189,7 +182,7 @@ class SegmentationImageSeparator(ImageSeparator):
                 if image.is_file() and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
             ]
 
-            for batches in ImageSeparator.batch(images, BATCH_SIZE):
+            for batches in create_batch(images, BATCH_SIZE):
                 futures: List[Future[bool]] = [
                     executor.submit(
                         self._process_pair_images,
@@ -217,7 +210,7 @@ class SegmentationImageSeparator(ImageSeparator):
 
             logger.info(
                 "Look at '%s': copied %d images, removed %d mostly black images",
-                self.source_word,
+                self.lookfor,
                 copied_count,
                 removed_count,
             )
