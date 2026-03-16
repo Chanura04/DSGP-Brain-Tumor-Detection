@@ -9,6 +9,7 @@ from services.model_manager import mri_head_detection, ct_head_detection, ct_tum
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
 
+
 defaults = {
     "ct_tumor_result": None,
     "mri_tumor_class": None,
