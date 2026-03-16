@@ -1,5 +1,5 @@
 [project]
-name = "dsgp-brain-tumor-detection"
+name = "dsgp_brain_tumor_detection"
 version = "0.1.0"
 description = "Brain Tumor Detection ML/DL Project"
 requires-python = ">=3.11,<3.12"
@@ -46,7 +46,3 @@ torchvision = { index = "pytorch" }
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
-
-# Linting config for flake8 (optional)
-[tool.flake8]
-max-line-length = 121

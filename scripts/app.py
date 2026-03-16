@@ -1,11 +1,6 @@
 import streamlit as st
 from PIL import Image
 import io
-import cv2
-from tensorflow.keras.models import load_model
-import tensorflow as tf
-from tensorflow.keras import backend as K
-import os
 
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
@@ -47,6 +42,7 @@ from services.model_manager import mri_head_detection, ct_head_detection, ct_tum
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
 >>>>>>> master
+
 
 defaults = {
     "ct_tumor_result": None,
