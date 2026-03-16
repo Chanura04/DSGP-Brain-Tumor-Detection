@@ -1,0 +1,119 @@
+{
+    "experiment_name": "splitting_dataset_into_train_val_test",
+    "dataset_name": "Brain Tumor MRI/CT/Segmentation Dataset",
+    "version": "1.0",
+    "status": "final",
+    "created_by": "Inzaman Careem",
+    "date_created": "2026-01-25",
+    "image_type": ["MRI", "CT", "SEGMENTATION"],
+    "format": ["png", "jpg", "jpeg"],
+    "classes": {
+        "mri": ["glioma", "meningioma", "pituitary"],
+        "ct": ["normal", "tumor"],
+        "segmentation": ["images", "masks"]
+    },
+    "preprocessing": "Split dataset into train/val/test using 3 unified MRI classes and 2 unified CT classes and 2 unified Segmentation classes",
+    "mri_images": {
+        "total_images": 4545,
+        "image_counts": {
+            "train": {
+                "glioma": 1278,
+                "meningioma": 1197,
+                "pituitary": 706
+            },
+            "val": {
+                "glioma": 365,
+                "meningioma": 342,
+                "pituitary": 201
+            },
+            "test": {
+                "glioma": 183,
+                "meningioma": 171,
+                "pituitary": 102
+            }
+        },
+        "percentages": {
+            "train": {
+                "glioma": 40.18,
+                "meningioma": 37.63,
+                "pituitary": 22.19
+            },
+            "val": {
+                "glioma": 40.20,
+                "meningioma": 37.67,
+                "pituitary": 22.14
+            },
+            "test": {
+                "glioma": 40.13,
+                "meningioma": 37.50,
+                "pituitary": 22.37
+            }
+        }
+    },
+
+    "ct_images": {
+        "total_images": 3309,
+        "image_counts": {
+            "train": {
+                "normal": 1130,
+                "tumor": 1185
+            },
+            "val": {
+                "normal": 323,
+                "tumor": 338
+            },
+            "test": {
+                "normal": 162,
+                "tumor": 171
+            }
+        },
+        "percentages": {
+            "train": {
+                "normal": 48.81,
+                "tumor": 51.19
+            },
+            "val": {
+                "normal": 48.87,
+                "tumor": 51.13
+            },
+            "test": {
+                "normal": 48.65,
+                "tumor": 51.35
+            }
+        }
+    },
+
+    "segmentation_images": {
+        "total_images": 12456,
+        "image_counts": {
+            "train": {
+                "images": 4359,
+                "masks": 4359
+            },
+            "val": {
+                "normal": 1245,
+                "masks": 1245
+            },
+            "test": {
+                "images": 624,
+                "masks": 624
+            }
+        },
+        "percentages": {
+            "train": {
+                "images": 50.00,
+                "masks": 50.00
+            },
+            "val": {
+                "normal": 50.00,
+                "masks": 50.00
+            },
+            "test": {
+                "images": 50.00,
+                "masks": 50.00
+            }
+        }
+    },
+
+    "notes": "Splitting dataset for early experiments."
+}

@@ -1,0 +1,18 @@
+model:
+  input_dim: 2
+  hidden_units: 10
+
+training:
+  batch_size: 32
+  lr: 0.01
+  momentum: 0.9
+  epochs: 15
+
+data:
+  image_size: [224, 224]
+  train_path: transform_v1/train.pt
+  val_path: transform_v1/val.pt
+  test_path: transform_v1/test.pt
+
+seed: 42
+device: cuda

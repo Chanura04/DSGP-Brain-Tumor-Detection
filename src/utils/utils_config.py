@@ -11,3 +11,5 @@ Constants:
 from typing import Set
 
 VALID_IMAGE_EXTENSIONS: Set[str] = {".png", ".jpg", ".jpeg"}
+
+RANDOM_SEED = 42

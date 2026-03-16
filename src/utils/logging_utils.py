@@ -12,8 +12,10 @@ Functions:
 """
 
 import logging
+from typing import Final
+from src.utils.file_utils import LOG_DIR
 
-LOG_FORMAT: str = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+LOG_FORMAT: Final[str] = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
 
 def setup_logging() -> None:
@@ -27,5 +29,8 @@ def setup_logging() -> None:
     :return:
     """
     logging.basicConfig(
-        level=logging.INFO, format=LOG_FORMAT, filename="log.log", filemode="a"
+        level=logging.INFO,
+        format=LOG_FORMAT,
+        filename=str(LOG_DIR / "log.log"),
+        filemode="a",
     )
