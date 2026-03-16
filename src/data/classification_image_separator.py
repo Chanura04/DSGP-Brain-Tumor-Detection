@@ -4,9 +4,9 @@ ClassificationImageSeparator Module
 This module provides the `ClassificationImageSeparator` concrete class, which is designed to filter out / copy
 low intensity images of a classification dataset of the organized raw dataset to an interim dataset. It supports:
 
-- Filtering images by a the mean threshold/ mean intensity of the image.
-- Filtering images by a the bright pixel ratio of the image.
-- Filtering images by a the max brightness of the image.
+- Filtering images by the mean threshold/ mean intensity of the image.
+- Filtering images by the bright pixel ratio of the image.
+- Filtering images by the max brightness of the image.
 - Copying only valid image extensions.
 - Logging progress, duplicates, and summary information.
 - Dry-run mode to simulate file operations without writing files.
@@ -46,12 +46,12 @@ from typing import List
 
 from src.data.base_image_separator import ImageSeparator
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
-from src.data.config import (
-    MAX_WORKERS,
-    BATCH_SIZE,
-    DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-    DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-)
+from src.data.config import MAX_WORKERS, BATCH_SIZE
+
+from src.utils.batching import create_batch
+from src.utils.image_utils import is_mostly_black
+
+from src.data.image_seperator_schema import ClassificationImageSeparatorConfig
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class ClassificationImageSeparator(ImageSeparator):
     A concrete class to filter out low intensity image files of a classification dataset from an original raw
     dataset to an interim dataset.
 
-    This class supports filtering by mean imtensity, brightness and bright pixel ratio, copying only valid image
+    This class supports filtering by mean intensity, brightness and bright pixel ratio, copying only valid image
     extensions, logging progress, and dry-run mode for testing.
 
     Attributes:
@@ -71,51 +71,21 @@ class ClassificationImageSeparator(ImageSeparator):
         dry_run (bool): If True, simulate copying without writing files.
     """
 
-    def __init__(
-        self,
-        dataset_path: str,
-        lookfor: str = DEFAULT_SEPARATOR_LOOKFOR_DIR_NAME,
-        out: str = DEFAULT_SEPARATOR_OUTPUT_DIR_NAME,
-        dry_run: bool = False,
-    ):
-        super().__init__(dataset_path, lookfor, out, dry_run)
+    def __init__(self, config: ClassificationImageSeparatorConfig):
+        super().__init__(config.dataset_path, config.lookfor, config.out, config.dry_run)
 
         self.source_folders: List[Path] = [
             f for f in self.dataset_path.iterdir() if f.is_dir()
         ]
 
-    def process_images(self) -> None:
-        for source in self.source_folders:
-            source_path: Path = Path(source) / self.source_word
-
-            if not source_path.exists():
-                logger.debug(
-                    "Skipping (no '%s' folder): %s", self.source_word, source_path
-                )
-                continue
-
-            out_folder: Path = self.make_directory(source)
-
-            logger.info("Processing from: %s", source_path)
-            logger.info("Outputting to: %s", out_folder)
-
-            if source_path.resolve() == Path(out_folder).resolve():
-                logger.debug("Source and destination are the same, skipping")
-                continue
-
-            # Process all images in source folder
-            count_total: int = 0
-            count_removed: int = 0
-            for image in source_path.glob("*.*"):
-                if image.is_file() and image.suffix.lower() in VALID_IMAGE_EXTENSIONS:
-                    count_total += 1
-                    if ClassificationImageSeparator.is_mostly_black(img_path=image):
-                        count_removed += 1
-            logger.info(
-                "Processed %d images, removed %d mostly black images.",
-                count_total,
-                count_removed,
-            )
+    def __repr__(self) -> str:
+        """
+        __repr__ is meant to provide an unambiguous string representation of the object.
+        It's often for debugging and should ideally return a string that could be used
+        to recreate the object.
+        :return: a developer friendly representation of the object
+        """
+        return f"ClassificationImageSeparator(dataset_path={self.dataset_path}, lookfor={self.lookfor}, out={self.out})"
 
     def _process_single_image(self, img: Path, dest: Path) -> bool:
         """
@@ -133,7 +103,7 @@ class ClassificationImageSeparator(ImageSeparator):
         returns: True if the image was removed (mostly black or failed), False if it was copied or dry-run logged.
         """
         try:
-            if ImageSeparator.is_mostly_black(img):
+            if is_mostly_black(img):
                 return True  # removed
 
             if self.dry_run:
@@ -142,7 +112,7 @@ class ClassificationImageSeparator(ImageSeparator):
             else:
                 shutil.copy2(img, dest)
                 return False  # copied
-        except Exception:
+        except OSError:
             logger.exception("File processing failed")
             return True
 
@@ -164,15 +134,15 @@ class ClassificationImageSeparator(ImageSeparator):
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
             for source in self.source_folders:
-                source_path: Path = Path(source) / self.source_word
+                source_path: Path = Path(source) / self.lookfor
 
                 if not source_path.exists():
                     logger.debug(
-                        "Skipping (no '%s' folder): %s", self.source_word, source_path
+                        "Skipping (no '%s' folder): %s", self.lookfor, source_path
                     )
                     continue
 
-                out_folder: Path = self.make_directory(source)
+                out_folder: Path = ImageSeparator.make_directory(source)
 
                 logger.info("Processing from: %s", source_path)
                 logger.info("Outputting to: %s", out_folder)
@@ -189,10 +159,10 @@ class ClassificationImageSeparator(ImageSeparator):
                     image
                     for image in source_path.glob("*")
                     if image.is_file()
-                    and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
+                       and image.suffix.lower() in VALID_IMAGE_EXTENSIONS
                 ]
 
-                for batches in ImageSeparator.batch(images, BATCH_SIZE):
+                for batches in create_batch(images, BATCH_SIZE):
                     futures: List[Future[bool]] = [
                         executor.submit(
                             self._process_single_image,
@@ -218,7 +188,7 @@ class ClassificationImageSeparator(ImageSeparator):
 
                 logger.info(
                     "Look at '%s': copied %d images, removed %d mostly black images",
-                    self.source_word,
+                    self.lookfor,
                     copied_count,
                     removed_count,
                 )

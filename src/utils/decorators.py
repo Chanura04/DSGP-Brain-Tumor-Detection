@@ -65,6 +65,14 @@ def get_time(func: Callable[..., T]) -> Callable[..., T]:
 
 
 def log_action(func: Callable[P, R]) -> Callable[P, R]:
+    """
+    Decorator to log the calling and returning of a function.
+    The call and return value is logged at INFO level using the configured logger.
+    Any exceptions are logged as EXCEPTION level using the configured logger.
+    :param func: The function whose calling is logged.
+    :return: A wrapper function that executes the original function and logs calling and returning value.
+    """
+
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         logger.info("Calling %s: args=%s kwargs=%s", func.__name__, args, kwargs)

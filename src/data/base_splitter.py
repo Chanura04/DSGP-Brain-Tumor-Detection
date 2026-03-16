@@ -35,7 +35,7 @@ from src.utils.utils_config import RANDOM_SEED
 from src.utils.decorators import get_time, log_action
 from src.data.config import DEFAULT_SPLITTING_LOOKFOR_DIR_NAME
 
-from typing import List, Generator, TypeVar
+from typing import List, TypeVar
 
 T = TypeVar("T")  # can be Path or Tuple[Path, Path]
 
@@ -77,34 +77,15 @@ class BaseSplitter(ABC):
     @log_action
     def make_directory(self, base_path: Path, subfolder: str) -> Path:
         """
-        Create the splitted directory in the interim dataset.
+        Create the separated directory in the interim dataset.
         If the directory already exists, it does nothing.
         :param base_path: Base folder where the subdirectory will be created.
         :param subfolder: Name of the subdirectory to create.
-        :return: Full path to the splitted directory.
+        :return: Full path to the separated directory.
         """
         out_folder = base_path / subfolder
         out_folder.mkdir(parents=True, exist_ok=True)
         return out_folder
-
-    @staticmethod
-    def batch(iterable: List[T], n: int) -> Generator[List[T], None, None]:
-        """
-        Makes batches of the total images to reduce cpu overload,
-        memory usage and have control over certain operation.
-        e.g. to increase efficiency, reduce downtime, and improve consistency.
-
-        :param iterable: image list to make batches
-        :param n: number of images in a batch
-        """
-        batch_list: List[T] = []
-        for item in iterable:
-            batch_list.append(item)
-            if len(batch_list) == n:
-                yield batch_list
-                batch_list = []
-        if batch_list:
-            yield batch_list
 
     @log_action
     @get_time
