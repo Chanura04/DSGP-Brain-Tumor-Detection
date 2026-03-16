@@ -1,0 +1,2 @@
+Purpose: Removing low intensity (black) images and class imbalance analysis
+Not suitable for final training

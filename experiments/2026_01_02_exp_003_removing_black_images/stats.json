@@ -1,0 +1,61 @@
+{
+    "mri_dataset": {
+        "before_removing": {
+            "total_images": 30598,
+            "folders": 4       
+        },
+        "after_removing": {
+            "total_images": 24870,
+            "folders": 4
+        },
+
+        "imbalance_metrics": {
+            "max_class": "meningioma",
+            "min_class": "no_tumor",
+            "imbalance_ratio": 4.85
+        },
+
+        "data_quality": {
+            "black_images_removed": true,
+            "black_images_count": 5728
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    },
+
+    "ct_dataset":{
+        "before_removing": {
+            "total_images": 4625,
+            "folders": 2       
+        },
+        "after_removing": {
+            "total_images": 4612,
+            "folders": 2
+        },
+
+        "imbalance_metrics": {
+            "max_class": "tumor",
+            "min_class": "normal",
+            "imbalance_ratio": 1.02
+        },
+
+        "data_quality": {
+            "black_images_removed": true,
+            "black_images_count": 13
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    }
+}

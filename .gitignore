@@ -7,21 +7,37 @@ __pycache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Data (DON'T UPLOAD RAW DATA)
-data/raw/
-data/interim/
-data/processed/
+# Data (DO NOT COMMIT DATA)
+data/raw/**
+data/interim/**
+data/processed/**
+!data/**/.gitkeep
 
 # Models
 models/*.pkl
 models/*.h5
 models/*.joblib
+models/*.pt
+models/*.pth
+models/*.keras
+
+*.pth
 
 # Environment files
+.venv/
 .env
 
 # MacOS files
 .DS_Store
 
-# VSCode
+# IDEs
 .vscode/
+.idea/
+
+# Tests
+.pytest_cache/
+
+htmlcov/
+.coverage
+
+results/*.db

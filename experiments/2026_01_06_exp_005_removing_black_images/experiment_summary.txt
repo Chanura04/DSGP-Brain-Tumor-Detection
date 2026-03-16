@@ -1,0 +1,2 @@
+Purpose: Removing low intensity (black) images
+Not suitable for final training

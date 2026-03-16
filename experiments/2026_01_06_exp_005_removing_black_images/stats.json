@@ -1,0 +1,25 @@
+{
+    "segmentation_dataset": {
+        "before_removing": {
+            "total_images": 12760,
+            "folders": 2       
+        },
+        "after_removing": {
+            "total_images": 12456,
+            "folders": 2
+        },
+
+        "data_quality": {
+            "black_images_removed": true,
+            "black_images_count": 151
+        },
+
+        "image_properties": {
+            "color_mode": "grayscale",
+            "min_resolution": "224x224",
+            "max_resolution": "512x512",
+            "resized": false,
+            "normalized": false
+        }
+    }
+}

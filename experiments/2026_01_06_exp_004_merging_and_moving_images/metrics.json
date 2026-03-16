@@ -1,0 +1,14 @@
+{
+    "experiment_name": "merging_and_moving_images",
+    "dataset_name": "Brain Tumor Segmentation Dataset (not final)",
+    "version": "1.0",
+    "status": "not_final",
+    "created_by": "Inzaman Careem",
+    "date_created": "2026-01-06",
+    "image_type": ["MRI", "CT"],
+    "format": "jpg",
+    "preprocessing": "Merged multiple datasets into 2 unified classes (images and masks)",
+    "total_images": 6380,
+    "total_masks": 6380,
+    "notes": "Merged dataset for early experiments; subject to change."
+}

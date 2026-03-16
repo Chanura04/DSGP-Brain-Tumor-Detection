@@ -14,9 +14,7 @@ Each **subfolder** represents **one training experiment**.
 - evaluation metrics.
 
 ### Naming Convention:
-- YYYY-MM-DD_model_description
-- exp_001_baseline/
-- exp_002_tuned_model/
+- YYYY-MM-DD_exp_no_model_description
 
 ### Example:
-- 2025-02-05_bert_lr1e-5
+- 2025-02-05_exp_001_bert_lr1e-5

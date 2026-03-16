@@ -1,0 +1,38 @@
+Experiment Summary: Semi-Supervised Top-View Image Selection
+
+Goal:
+Efficiently identify high-confidence top-view images from large, noisy, unlabeled datasets by leveraging a small, clean, human-labeled dataset.
+
+Core Idea:
+
+This experiment uses a semi-supervised filtering strategy:
+Supervised learning on a small, balanced, high-quality labeled dataset (top vs other)
+Inference at scale on large unlabeled datasets
+High-confidence selection to extract only the most reliable top-view predictions
+Rather than labeling everything, the model acts as a precision-first selector.
+
+Training Setup:
+Model: ResNet-18 pretrained on ImageNet
+Task: Binary classification (top vs other)
+Input: 224×224 RGB images
+Augmentation: Resize + ColorJitter
+Optimizer: Adam
+Loss: Cross-Entropy
+Device: GPU if available
+Data: Small, clean, human-labeled, class-balanced dataset
+
+Training tracks:
+Epoch loss
+TensorBoard logs
+Saved model weights + class mappings
+
+Inference & Selection:
+
+The trained model is run over multiple unlabeled datasets
+For each image - Softmax probability for the top class is computed
+
+Selection rule - Keep images where P(top) ≥ 0.98 (ct) and 0.99 (mri)
+
+Sort by confidence - Copy selected images into a dedicated output folder
+
+This enforces very high precision, intentionally sacrificing recall.
