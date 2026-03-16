@@ -9,6 +9,7 @@ from services.model_manager import mri_head_detection, ct_head_detection, ct_tum
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
 
+
 defaults = {
     "ct_tumor_result": None,
     "mri_tumor_class": None,
@@ -156,19 +157,19 @@ if st.session_state.results_ready:
         with report_col1:
             st.markdown(f"""
             ### 🏥 Patient Imaging Summary
-
+    
             **CT Result:**
-
+            
                 -  Status: {ct_tumor_result} 
-
-
+    
+    
             **MRI Result:** 
-
+            
                 -  Confidence: {mri_tumor_probability:.2f}%
                 -  Status: {mri_tumor_class}
-
+                
             ---
-
+    
             ⚠️ This is an AI-assisted preliminary analysis.
             """)
         with report_col2:
