@@ -11,6 +11,7 @@ from albumentations.pytorch import ToTensorV2
 from tensorflow.keras import backend
 from tensorflow.keras.layers import Conv2DTranspose
 import cv2
+from torchvision import models, transforms
 
 from src.utils.image_utils import HEAD_DETECTION_IMG_SIZE, CT_MRI_TUMOR_IMG_SIZE, SEGMENTATION_TUMOR_IMG_SIZE
 
@@ -113,48 +114,51 @@ tumor_segmentation_model = load_model("models/tumor_segmentation_model.h5",
                                       compile=False)
 
 
-def ct_head_detection(ct_file_bytes):
-    img = Image.open(io.BytesIO(ct_file_bytes)).convert("RGB")
+def load_model(model_path, device="cuda"):
+    device = torch.device(device if torch.cuda.is_available() else "cpu")
+    weights = models.ResNet18_Weights.IMAGENET1K_V1
+    model = models.resnet18(weights=weights)
+    model.fc = torch.nn.Linear(model.fc.in_features, 2)  # top vs other
+    model = model.to(device)
+
+    checkpoint = torch.load(model_path, map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+    class_to_idx = checkpoint["class_to_idx"]
+    return model, class_to_idx, device
+
+
+def predict_image(model, class_to_idx, device, img):
+    preproc = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    x = preproc(img).unsqueeze(0).to(device)
+    with torch.no_grad():
+        logits = model(x)
+        probs = torch.softmax(logits, dim=1)
+
+    top_idx = class_to_idx.get("top", 0)
+    top_prob = probs[0][top_idx].item()
+    return top_prob
+
+
+model_path = "/models/axial_view_detection_model.pth"
+model, class_to_idx, device = load_model(model_path)
+
+
+def head_detection(file_bytes):
+    img = Image.open(io.BytesIO(file_bytes)).convert("RGB")
     img = img.resize(HEAD_DETECTION_IMG_SIZE)
 
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    prediction = predict_image(model, class_to_idx, device, img)
 
-    prediction = axial_view_detection_ct_model.predict(img_array).item()
-
-    if prediction > 0.85:
-        confidence = prediction
-    else:
-        confidence = 1 - prediction
-
-    if confidence > 0.85:
+    if prediction > 0.99:
         value = 1
     else:
         value = 0
 
-    return value, confidence * 100
-
-
-def mri_head_detection(mri_file_bytes):
-    img = Image.open(io.BytesIO(mri_file_bytes)).convert("RGB")
-    img = img.resize(HEAD_DETECTION_IMG_SIZE)
-
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
-
-    prediction = axial_view_detection_mri_model.predict(img_array).item()
-
-    if prediction > 0.85:
-        confidence = prediction
-    else:
-        confidence = 1 - prediction
-
-    if confidence > 0.85:
-        value = 1
-    else:
-        value = 0
-
-    return value, confidence * 100
+    return value, prediction * 100
 
 
 def ct_tumor_detection(ct_file_bytes):
@@ -238,3 +242,5 @@ def overlay_mask(original_image_file_bytes, mask, alpha=0.5):
     border = cv2.dilate(mask, kernel, iterations=1) - mask
     overlay[border == 1] = [255, 0, 0]
     return overlay
+#
+#     return value, prediction * 100

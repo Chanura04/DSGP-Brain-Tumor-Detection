@@ -12,7 +12,7 @@ from pathlib import Path
 from numpy.typing import NDArray
 from typing import Optional, cast
 
-HEAD_DETECTION_IMG_SIZE = (128, 128)
+HEAD_DETECTION_IMG_SIZE = (224, 224)
 CT_MRI_TUMOR_IMG_SIZE = (224, 224)
 SEGMENTATION_TUMOR_IMG_SIZE = (256, 256)
 
