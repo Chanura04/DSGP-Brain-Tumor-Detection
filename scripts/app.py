@@ -5,7 +5,7 @@ import io
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 
-from services.model_manager import mri_head_detection, ct_head_detection, ct_tumor_detection, mri_tumor_classification, \
+from services.model_manager import head_detection, ct_tumor_detection, mri_tumor_classification, \
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
 
@@ -78,19 +78,22 @@ if st.button("🔬 Check for Tumor", type="primary", width="stretch"):
     if error:
         st.stop()
 
-    ct_head_detection_result, ct_head_detection_confidence = ct_head_detection(ct_file_bytes)
+    ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
     # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
 
     if ct_head_detection_result == 0:
         st.error("❌ Please upload a valid head top-view CT image!")
         st.stop()
 
-    mri_head_detection_result, mri_head_detection_confidence = mri_head_detection(mri_file_bytes)
+    mri_head_detection_result, mri_head_detection_confidence = head_detection(mri_file_bytes)
     # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
 
     if mri_head_detection_result == 0:
         st.error("❌ Please upload a valid head top-view MRI image!")
         st.stop()
+
+    st.write(ct_head_detection_result, ct_head_detection_confidence)
+    st.write(mri_head_detection_result, mri_head_detection_confidence)
 
     with st.spinner("🔄 Processing images..."):
         ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
