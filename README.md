@@ -40,13 +40,11 @@ DSGP-Brain-Tumor_Detection
 ├── tests
 │   └── test_organize.py
 ├── .gitignore
-├── .python-version
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── Makefile
 ├── pyproject.toml
 ├── README.md
-├── setup.cfg
+├── setup.ps1
 └── uv.lock
 ```
 
@@ -59,14 +57,13 @@ DSGP-Brain-Tumor_Detection
 - git clone https://github.com/Chanura04/DSGP-Brain-Tumor-Detection.git
 - cd DSGP-Brain-Tumor-Detection
 
-### 2. Install dependencies
+### 2. Project Setup
 
-- poetry export -f requirements.txt --output requirements.txt
-- pip install -r requirements.txt
+- ``./setup.ps1``
 
 ### 3. Run the pipeline
 
-- make all
+[//]: # (- make all)
 
 ---
 
