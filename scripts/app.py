@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 import io
+from pydantic import ValidationError
 
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
@@ -8,7 +9,7 @@ from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 from services.model_manager import head_detection, ct_tumor_detection, mri_tumor_classification, \
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
-
+from services.input_validator import RadiologistReportValidator
 
 defaults = {
     "ct_tumor_result": None,
@@ -24,8 +25,6 @@ defaults = {
 for key, val in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = val
-
-error = False
 
 # ---------------- UI ----------------
 st.set_page_config(page_title="MRI and CT Tumor Detection", layout="wide")
@@ -57,25 +56,22 @@ if st.button("🔬 Check for Tumor", type="primary", width="stretch"):
 
     if not ct_image or not mri_image:
         st.error("❌ Please upload both MRI and CT images!")
-        error = True
+        st.stop()
 
     if is_too_black(ct_file_bytes):
         st.error("❌ CT Image too dark!")
-        error = True
+        st.stop()
 
     if is_too_white(ct_file_bytes):
         st.error("❌ CT Image too light!")
-        error = True
+        st.stop()
 
     if is_too_black(mri_file_bytes):
         st.error("❌ MRI Image too dark!")
-        error = True
+        st.stop()
 
     if is_too_white(mri_file_bytes):
         st.error("❌ MRI Image too light!")
-        error = True
-
-    if error:
         st.stop()
 
     ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
@@ -92,8 +88,8 @@ if st.button("🔬 Check for Tumor", type="primary", width="stretch"):
         st.error("❌ Please upload a valid head top-view MRI image!")
         st.stop()
 
-    st.write(ct_head_detection_result, ct_head_detection_confidence)
-    st.write(mri_head_detection_result, mri_head_detection_confidence)
+    # st.write(ct_head_detection_result, ct_head_detection_confidence)
+    # st.write(mri_head_detection_result, mri_head_detection_confidence)
 
     with st.spinner("🔄 Processing images..."):
         ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
@@ -191,11 +187,15 @@ if st.session_state.results_ready:
             submit_report = st.form_submit_button("✅ Submit Radiologist Report")
 
             if submit_report:
-                if not rad_name or not rad_phone or not rad_email or not rad_comment:
-                    st.error("Please fill all required fields.")
+                try:
+                    report = RadiologistReportValidator(name=rad_name, phone=rad_phone, email=rad_email,
+                                                        comments=rad_comment)
+                except ValidationError as e:
+                    st.error("Invalid input. Please check your details.")
+                    st.stop()
                 else:
-                    save_radiologist_data(feedback_id, rad_name, rad_phone, rad_email, rad_comment, mri_tumor_class,
-                                          ct_tumor_result)
+                    save_radiologist_data(feedback_id, report.name, report.phone, report.email, report.comments,
+                                          mri_tumor_class, ct_tumor_result)
                     st.session_state.report_submitted = True
                     st.success("✅ Radiologist report saved successfully!")
 
