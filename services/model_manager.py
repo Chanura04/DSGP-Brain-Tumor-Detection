@@ -15,8 +15,6 @@ from torchvision import models, transforms
 
 from src.utils.image_utils import HEAD_DETECTION_IMG_SIZE, CT_MRI_TUMOR_IMG_SIZE, SEGMENTATION_TUMOR_IMG_SIZE
 
-axial_view_detection_ct_model = load_model("models/axial_view_detection_ct_model.keras")
-axial_view_detection_mri_model = load_model("models/axial_view_detection_mri_model.keras")
 ct_tumor_detection_model = load_model("models/ct_tumor_detection_model.keras")
 
 
@@ -143,7 +141,7 @@ def predict_image(model, class_to_idx, device, img):
     return top_prob
 
 
-model_path = "/models/axial_view_detection_model.pth"
+model_path = "models/axial_view_detection_model.pth"
 model, class_to_idx, device = load_model(model_path)
 
 
