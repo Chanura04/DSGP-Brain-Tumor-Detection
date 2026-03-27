@@ -56,9 +56,9 @@ def aboutus():
 
     ### Our Team
     - Kabilash Arunasalam  
-    - Chanura 
-    - Inazaman Sheshan Careem
-    - Lahiru
+    - Chanura Karunanayake
+    - Inzaman Careem
+    - Lahiru Adikari
 
     ### Key Highlights
     - Automated tumor classification
