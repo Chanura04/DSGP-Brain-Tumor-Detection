@@ -17,75 +17,73 @@ from services.input_validator import RadiologistReportValidator
 
 def main_app():
     st.markdown("""
-        <style>
-
-            div.stButton {
-                display: flex;
-                justify-content: center;
-            }
-
+        <style>            
             div.stButton > button {
-                background-color: #1a1a1a;
-                color: #ff8c00;
-                border-radius: 15px;
-                padding: 8px 20px;
+                background: linear-gradient(145deg, #ffa733, #ff7a33);
+                border-radius: 20px;
+                padding: 12px 25px;
                 border: none;
+                color: white;
+                font-weight: bold;
+                cursor: pointer;
                 width: 100%;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
             }
-
-
+            
             div.stButton > button:hover {
-                background-color: #ff8c00;
-                color: black;
+                background: linear-gradient(145deg, #ff8c00, #e65c00);
+                transform: scale(1.05);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
             }
-
-
-        </style>
+            </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-        <style>
-        /* General body */
-        body {
-            background-color: #000000;
-            color: #ff8c00;
-            font-family: 'Arial', sans-serif;
-        }
-
-        /* Navbar container with equal spacing */
-        .navbar {
-            display: flex;
-            justify-content: space-around;  /* equally space links */
-            align-items: center;
-            background-color: #1a1a1a;
-            padding:10px 0;
-            border-radius: 20px;
-            margin-bottom: 30px;
-        }
-
-        /* Navbar links */
-        .navbar a {
-            color: #ff8c00;
-            text-decoration: none;
-            padding: 3px 20px;
-            border-radius: 15px;
-            transition: 0.3s;
-            font-weight: bold;
-        }
-
-        /* Hover effect */
-        .navbar a:hover {
-            background-color: #ff8c00;
-            color: #000000;
-        }
-
-        /* Active page highlight */
-        .navbar a.active {
-            background-color: #ff8c00;
-            color: #000000;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # st.markdown("""
+    #     <style>
+    #     /* General body */
+    #     body {
+    #         background-color: #000000;
+    #         color: #ff8c00;
+    #         font-family: 'Arial', sans-serif;
+    #     }
+    #
+    #     /* Navbar container with equal spacing */
+    #     .navbar {
+    #         display: flex;
+    #         justify-content: space-around;  /* equally space links */
+    #         align-items: center;
+    #         background-color: #1a1a1a;
+    #         padding:10px 0;
+    #         border-radius: 20px;
+    #         margin-bottom: 30px;
+    #     }
+    #
+    #     /* Navbar links */
+    #     .navbar a {
+    #         color: #ff8c00;
+    #         text-decoration: none;
+    #         padding: 3px 20px;
+    #         border-radius: 15px;
+    #         transition: 0.3s;
+    #         font-weight: bold;
+    #     }
+    #
+    #     /* Hover effect */
+    #     .navbar a:hover {
+    #         background-color: #ff8c00;
+    #         color: #000000;
+    #     }
+    #
+    #     /* Active page highlight */
+    #     .navbar a.active {
+    #         background-color: #ff8c00;
+    #         color: #000000;
+    #     }
+    #     </style>
+    # """, unsafe_allow_html=True)
 
     defaults = {
         "ct_tumor_result": None,
@@ -134,7 +132,6 @@ def main_app():
 
 
 def home():
-    error = False
     col1, col2 = st.columns(2)
 
     with col1:
@@ -161,71 +158,67 @@ def home():
 
     with col4:
         if st.button("🔬 Check for Tumor", width="stretch"):
-
             if not ct_image or not mri_image:
                 st.error("❌ Please upload both MRI and CT images!")
                 st.stop()
 
             elif is_too_black(ct_file_bytes):
-                st.error("❌ CT Image too dark!")
+                st.error("❌ Invalid CT Image")
                 st.stop()
 
             elif is_too_white(ct_file_bytes):
-                st.error("❌ CT Image too light!")
+                st.error("❌ Invalid CT Image")
                 st.stop()
 
             elif is_too_black(mri_file_bytes):
-                st.error("❌ MRI Image too dark!")
+                st.error("❌ Invalid MRI Image")
                 st.stop()
 
             elif is_too_white(mri_file_bytes):
-                st.error("❌ MRI Image too light!")
+                st.error("❌ Invalid MRI Image")
                 st.stop()
 
-            if error:
+            ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
+            # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
+
+            if ct_head_detection_result == 0:
+                st.error("❌ Please upload a valid head top-view CT image!")
                 st.stop()
 
-    ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
-    # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
+            mri_head_detection_result, mri_head_detection_confidence = head_detection(mri_file_bytes)
+            # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
 
-    if ct_head_detection_result == 0:
-        st.error("❌ Please upload a valid head top-view CT image!")
-        st.stop()
+            if mri_head_detection_result == 0:
+                st.error("❌ Please upload a valid head top-view MRI image!")
+                st.stop()
 
-    mri_head_detection_result, mri_head_detection_confidence = head_detection(mri_file_bytes)
-    # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
+            with st.spinner("Processing images..."):
+                ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
+                # print(f"CT Tumor Probability: {ct_tumor_probability}")
 
-    if mri_head_detection_result == 0:
-        st.error("❌ Please upload a valid head top-view MRI image!")
-        st.stop()
+                if ct_tumor_result == "No Tumor Detected":
+                    st.session_state.ct_tumor_result = ct_tumor_result
+                    st.session_state.results_ready = True
+                else:
+                    mri_tumor_class, mri_tumor_probability = mri_tumor_classification(mri_file_bytes)
 
-    with st.spinner("🔄 Processing images..."):
-        ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
-        # print(f"CT Tumor Probability: {ct_tumor_probability}")
+                    # print(f"MRI Tumor Predicted Class: {mri_tumor_class}")
+                    # print(f"MRI Tumor Probability: {mri_tumor_probability}")
 
-        if ct_tumor_result == "No Tumor Detected":
-            st.session_state.ct_tumor_result = ct_tumor_result
-            st.session_state.results_ready = True
-        else:
-            mri_tumor_class, mri_tumor_probability = mri_tumor_classification(mri_file_bytes)
+                    segmented_image = tumor_segmentation(mri_file_bytes)
+                    overlay_image = overlay_mask(mri_file_bytes, segmented_image)
 
-            # print(f"MRI Tumor Predicted Class: {mri_tumor_class}")
-            # print(f"MRI Tumor Probability: {mri_tumor_probability}")
+                    # Store everything in session state
+                    st.session_state.ct_tumor_result = ct_tumor_result
+                    st.session_state.mri_tumor_class = mri_tumor_class
+                    st.session_state.mri_tumor_probability = mri_tumor_probability
+                    st.session_state.results_ready = True
+                    st.session_state.segmented_image = segmented_image
+                    st.session_state.overlay_image = overlay_image
+                    st.session_state.feedback_id = generate_feedback_id()
 
-            segmented_image = tumor_segmentation(mri_file_bytes)
-            overlay_image = overlay_mask(mri_file_bytes, segmented_image)
-
-            # Store everything in session state
-            st.session_state.ct_tumor_result = ct_tumor_result
-            st.session_state.mri_tumor_class = mri_tumor_class
-            st.session_state.mri_tumor_probability = mri_tumor_probability
-            st.session_state.results_ready = True
-            st.session_state.segmented_image = segmented_image
-            st.session_state.overlay_image = overlay_image
-            st.session_state.feedback_id = generate_feedback_id()
-
-            # Reset radiologist fields for new scan
-            st.session_state.report_submitted = False
+                    # Reset radiologist fields for new scan
+                    st.session_state.report_submitted = False
 
     if st.session_state.results_ready:
         if st.session_state.ct_tumor_result == "No Tumor Detected":
@@ -244,13 +237,13 @@ def home():
         result_col1, result_col2 = st.columns(2)
 
         with result_col1:
-            st.subheader("CT Analysis")
+            st.subheader("🩻 CT Analysis")
             st.error(f"🔴 {ct_tumor_result}")
             st.markdown("---")
             st.image(segmented_image, caption="CT Segmentation Preview", width="stretch")
 
         with result_col2:
-            st.subheader("MRI Analysis")
+            st.subheader("🧠 MRI Analysis")
             st.error(f"🔴 {mri_tumor_class}")
             st.markdown("---")
 
