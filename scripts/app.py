@@ -8,7 +8,7 @@ from login import login_page
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 
-from services.model_manager import mri_head_detection, ct_head_detection, ct_tumor_detection, mri_tumor_classification, \
+from services.model_manager import head_detection, ct_tumor_detection, mri_tumor_classification, \
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
 
@@ -89,26 +89,22 @@ def main_app():
 
 
 
-    defaults = {
-        "ct_tumor_result": None,
-        "mri_tumor_class": None,
-        "mri_tumor_probability": 0,
-        "results_ready": False,
-        "segmented_image": None,
-        "overlay_image": None,
-        "feedback_id": None,
-        "report_submitted": False
-    }
+    ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
+    # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
 
 
-    for key, val in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = val
+    mri_head_detection_result, mri_head_detection_confidence = head_detection(mri_file_bytes)
+    # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
 
     if "page" not in st.session_state:
         st.session_state.page = "home"
 
-    # ---------------- UI ----------------
+    st.write(ct_head_detection_result, ct_head_detection_confidence)
+    st.write(mri_head_detection_result, mri_head_detection_confidence)
+
+    with st.spinner("🔄 Processing images..."):
+        ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
+        # print(f"CT Tumor Probability: {ct_tumor_probability}")
 
 
     st.set_page_config(page_title="MRI and CT Tumor Detection", layout="wide")
