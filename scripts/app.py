@@ -8,11 +8,9 @@ from login import login_page
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
 
-from services.model_manager import head_detection, ct_tumor_detection, mri_tumor_classification, \
+from services.model_manager import mri_head_detection, ct_head_detection, ct_tumor_detection, mri_tumor_classification, \
     tumor_segmentation, overlay_mask
 from services.database_manager import generate_feedback_id, save_radiologist_data, save_text_report
-
-
 
 
 def main_app():
@@ -87,29 +85,28 @@ def main_app():
         </style>
     """, unsafe_allow_html=True)
 
+    defaults = {
+        "ct_tumor_result": None,
+        "mri_tumor_class": None,
+        "mri_tumor_probability": 0,
+        "results_ready": False,
+        "segmented_image": None,
+        "overlay_image": None,
+        "feedback_id": None,
+        "report_submitted": False
+    }
 
-
-    ct_head_detection_result, ct_head_detection_confidence = head_detection(ct_file_bytes)
-    # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
-
-
-    mri_head_detection_result, mri_head_detection_confidence = head_detection(mri_file_bytes)
-    # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
+    for key, val in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = val
 
     if "page" not in st.session_state:
         st.session_state.page = "home"
 
-    st.write(ct_head_detection_result, ct_head_detection_confidence)
-    st.write(mri_head_detection_result, mri_head_detection_confidence)
-
-    with st.spinner("🔄 Processing images..."):
-        ct_tumor_result, ct_tumor_probability = ct_tumor_detection(ct_file_bytes)
-        # print(f"CT Tumor Probability: {ct_tumor_probability}")
-
+    # ---------------- UI ----------------
 
     st.set_page_config(page_title="MRI and CT Tumor Detection", layout="wide")
     st.markdown("<h1 style='text-align: center;'> MRI and CT Tumor Detection System</h1>", unsafe_allow_html=True)
-
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -122,12 +119,8 @@ def main_app():
     with col4:
         nav_button("Login", "login")
 
-    
-
-
     st.markdown("---")
-    
-    
+
     if st.session_state.page == "home":
         home()
     elif st.session_state.page == "about":
@@ -136,8 +129,6 @@ def main_app():
         contactus()
     elif st.session_state.page == "login":
         login_page()
-
-
 
 
 def home():
@@ -150,7 +141,7 @@ def home():
         if ct_image:
             ct_file_bytes = ct_image.getvalue()
             st.image(Image.open(io.BytesIO(ct_file_bytes)).resize(IMAGE_DISPLAY_SIZE), caption="Uploaded CT Image",
-                    width="stretch")
+                     width="stretch")
 
     with col2:
         st.subheader("📷 MRI Image Portal")
@@ -158,7 +149,7 @@ def home():
         if mri_image:
             mri_file_bytes = mri_image.getvalue()
             st.image(Image.open(io.BytesIO(mri_file_bytes)).resize(IMAGE_DISPLAY_SIZE), caption="Uploaded MRI Image",
-                    width="stretch")
+                     width="stretch")
 
     st.markdown("---")
 
@@ -194,14 +185,14 @@ def home():
 
             ct_head_detection_result, ct_head_detection_confidence = ct_head_detection(ct_file_bytes)
             # print(f"CT head detection confidence: {ct_head_detection_confidence}%")
-            print (ct_head_detection_confidence)
+            print(ct_head_detection_confidence)
             if ct_head_detection_result == 0:
                 st.error("❌ Please upload a valid head top-view CT image!")
                 st.stop()
 
             mri_head_detection_result, mri_head_detection_confidence = mri_head_detection(mri_file_bytes)
             # print(f"MRI head detection confidence: {mri_head_detection_confidence}%")
-            print (mri_head_detection_confidence)
+            print(mri_head_detection_confidence)
             if mri_head_detection_result == 0:
                 st.error("❌ Please upload a valid head top-view MRI image!")
                 st.stop()
@@ -271,19 +262,19 @@ def home():
             with report_col1:
                 st.markdown(f"""
                 ### Patient Imaging Summary
-        
+
                 **CT Result:**
-                
+
                     -  Status: {ct_tumor_result} 
-        
-        
+
+
                 **MRI Result:** 
-                
+
                     -  Confidence: {mri_tumor_probability:.2f}%
                     -  Status: {mri_tumor_class}
-                    
+
                 ---
-        
+
                 ⚠️ This is an AI-assisted preliminary analysis.
                 """)
             with report_col2:
@@ -306,7 +297,7 @@ def home():
                         st.error("Please fill all required fields.")
                     else:
                         save_radiologist_data(feedback_id, rad_name, rad_phone, rad_email, rad_comment, mri_tumor_class,
-                                            ct_tumor_result)
+                                              ct_tumor_result)
                         st.session_state.report_submitted = True
                         st.success("✅ Radiologist report saved successfully!")
 
@@ -316,18 +307,19 @@ def home():
                 st.download_button(
                     label="Download Report",
                     data=save_text_report(feedback_id, ct_tumor_result, mri_tumor_class, rad_name, rad_phone, rad_email,
-                                        rad_comment),
+                                          rad_comment),
                     file_name=f"{feedback_id}_tumor_report.txt",
                     mime="text/plain",
                     width="stretch"
                 )
                 st.markdown("---")
 
+
 def nav_button(label, page_name):
     if st.button(label, key=page_name, use_container_width=True):
         st.session_state.page = page_name
-        st.rerun()  
-    
+        st.rerun()
+
     if st.session_state.page == page_name:
         st.markdown(f"""
         <style>
@@ -337,7 +329,6 @@ def nav_button(label, page_name):
         }}
         </style>
         """, unsafe_allow_html=True)
-
 
 
 main_app()
