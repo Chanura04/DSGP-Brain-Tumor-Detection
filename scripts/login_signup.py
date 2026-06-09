@@ -1,6 +1,7 @@
 import streamlit as st
-from database import create_users_table
+
 from auth import signup, login
+from database import create_users_table
 
 create_users_table()
 

@@ -1,21 +1,27 @@
-from tensorflow.keras.models import load_model
-import tensorflow as tf
-import numpy as np
-import io
-from PIL import Image
 import torch
-from torch import nn
 import yaml
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-from tensorflow.keras import backend
-from tensorflow.keras.layers import Conv2DTranspose
-import cv2
-from torchvision import models, transforms
+from keras import backend
+from keras.layers import Conv2DTranspose
+from keras.models import load_model
+from torch import nn
+from torchvision import models
 
-from src.utils.image_utils import HEAD_DETECTION_IMG_SIZE, CT_MRI_TUMOR_IMG_SIZE, SEGMENTATION_TUMOR_IMG_SIZE
 
-ct_tumor_detection_model = load_model("models/ct_tumor_detection_model.keras")
+def load_head_detection_model():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    weights = models.ResNet18_Weights.IMAGENET1K_V1
+    model = models.resnet18(weights=weights)
+    model.fc = torch.nn.Linear(model.fc.in_features, 2)  # top vs other
+    model = model.to(device)
+
+    checkpoint = torch.load("models/axial_view_detection_model.pth", map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+    return model, checkpoint["class_to_idx"], device
+
+
+def load_ct_tumor_detection_model():
+    return load_model("models/ct_tumor_detection_model.keras")
 
 
 def load_config(path):
@@ -67,24 +73,18 @@ class CustomCNN(nn.Module):
 def make_model(cfg, classes, device):
     model = CustomCNN(input_shape=cfg["model"]["input_dim"], hidden_units=cfg["model"]["hidden_units"],
                       output_shape=len(classes), dropout=cfg["model"]["dropout"], cfg=cfg).to(device)
-
     return model
 
 
-config = load_config("configs/config.yaml")
-device = "cuda" if config["device"] == "cuda" and torch.cuda.is_available() else "cpu"
-classes = ['glioma', 'meningioma', 'pituitary']
-mri_tumor_classification_model = make_model(config, classes, device)
-checkpoint = torch.load("models/mri_tumor_classification_model.pth", map_location=device, weights_only=False)
-mri_tumor_classification_model.load_state_dict(checkpoint["model_state_dict"])
-transform = A.Compose([ToTensorV2()], additional_targets={'image0': 'image'})
+def load_mri_tumor_classification_model():
+    config = load_config("configs/config.yaml")
+    device = "cuda" if config["device"] == "cuda" and torch.cuda.is_available() else "cpu"
+    classes = ['glioma', 'meningioma', 'pituitary']
+    mri_tumor_classification_model = make_model(config, classes, device)
+    checkpoint = torch.load("models/mri_tumor_classification_model.pth", map_location=device, weights_only=False)
+    mri_tumor_classification_model.load_state_dict(checkpoint["model_state_dict"])
 
-
-def zscore_norm_tensor(x):
-    x = x.float() / 255.0
-    mean = x.mean(dim=[1, 2], keepdim=True)
-    std = x.std(dim=[1, 2], keepdim=True, unbiased=False)
-    return (x - mean) / (std + 1e-8)
+    return mri_tumor_classification_model, classes, device
 
 
 def dice_coef(y_true, y_pred, smooth=1):
@@ -94,12 +94,6 @@ def dice_coef(y_true, y_pred, smooth=1):
     return (2. * intersection + smooth) / (backend.sum(y_true_f) + backend.sum(y_pred_f) + smooth)
 
 
-def dice_loss(y_true, y_pred):
-    smooth = 1.0
-    intersection = tf.reduce_sum(y_true * y_pred)
-    return 1 - (2. * intersection + smooth) / (tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) + smooth)
-
-
 class Conv2DTransposeFixed(Conv2DTranspose):
     @classmethod
     def from_config(cls, config):
@@ -107,138 +101,7 @@ class Conv2DTransposeFixed(Conv2DTranspose):
         return super().from_config(config)
 
 
-tumor_segmentation_model = load_model("models/tumor_segmentation_model.h5",
-                                      custom_objects={"dice_coef": dice_coef, "Conv2DTranspose": Conv2DTransposeFixed},
-                                      compile=False)
-
-
-def load_model(model_path, device="cuda"):
-    device = torch.device(device if torch.cuda.is_available() else "cpu")
-    weights = models.ResNet18_Weights.IMAGENET1K_V1
-    model = models.resnet18(weights=weights)
-    model.fc = torch.nn.Linear(model.fc.in_features, 2)  # top vs other
-    model = model.to(device)
-
-    checkpoint = torch.load(model_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.eval()
-    class_to_idx = checkpoint["class_to_idx"]
-    return model, class_to_idx, device
-
-
-def predict_image(model, class_to_idx, device, img):
-    preproc = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    x = preproc(img).unsqueeze(0).to(device)
-    with torch.no_grad():
-        logits = model(x)
-        probs = torch.softmax(logits, dim=1)
-
-    top_idx = class_to_idx.get("top", 0)
-    top_prob = probs[0][top_idx].item()
-    return top_prob
-
-
-model_path = "models/axial_view_detection_model.pth"
-model, class_to_idx, device = load_model(model_path)
-
-
-def head_detection(file_bytes):
-    img = Image.open(io.BytesIO(file_bytes)).convert("RGB")
-    img = img.resize(HEAD_DETECTION_IMG_SIZE)
-
-    prediction = predict_image(model, class_to_idx, device, img)
-
-    if prediction > 0.99:
-        value = 1
-    else:
-        value = 0
-
-    return value, prediction * 100
-
-
-def ct_tumor_detection(ct_file_bytes):
-    img = Image.open(io.BytesIO(ct_file_bytes)).convert("L")
-    img = img.resize(CT_MRI_TUMOR_IMG_SIZE)
-
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=-1)
-    img_array = np.expand_dims(img_array, axis=0)
-
-    prediction = ct_tumor_detection_model.predict(img_array).item()
-
-    if prediction > 0.5:
-        label = "Tumor Detected"
-    else:
-        label = "No Tumor Detected"
-
-    return label, prediction * 100
-
-
-def mri_tumor_classification(mri_file_bytes):
-    raw_image = cv2.imdecode(np.frombuffer(mri_file_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
-
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    proc_image = clahe.apply(raw_image)
-    proc_image = cv2.resize(proc_image, CT_MRI_TUMOR_IMG_SIZE, interpolation=cv2.INTER_LINEAR)
-
-    raw_img = cv2.resize(raw_image, CT_MRI_TUMOR_IMG_SIZE)
-    proc_img = cv2.resize(proc_image, CT_MRI_TUMOR_IMG_SIZE)
-
-    raw_img = raw_img[..., None]
-    proc_img = proc_img[..., None]
-
-    augmented = transform(image=raw_img, image0=proc_img)
-    raw_tensor = augmented['image']
-    proc_tensor = augmented['image0']
-
-    # Optional: z-score normalization
-    raw_tensor = zscore_norm_tensor(raw_tensor)
-    proc_tensor = zscore_norm_tensor(proc_tensor)
-
-    raw_tensor = raw_tensor.unsqueeze(0)
-    proc_tensor = proc_tensor.unsqueeze(0)
-
-    mri_tumor_classification_model.eval()
-    with torch.inference_mode():
-        raw_tensor, proc_tensor = raw_tensor.to(device, non_blocking=True), proc_tensor.to(device, non_blocking=True)
-        pred = mri_tumor_classification_model(raw_tensor, proc_tensor)
-        pred_probs = torch.softmax(pred, dim=1)
-        predicted_idx = torch.argmax(pred_probs, dim=1).item()
-
-    return classes[predicted_idx], pred_probs[0, predicted_idx].item() * 100
-
-
-def tumor_segmentation(image_file_bytes):
-    img = Image.open(io.BytesIO(image_file_bytes)).convert("RGB")
-    img = img.resize(SEGMENTATION_TUMOR_IMG_SIZE)
-
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
-
-    prediction_mask = tumor_segmentation_model.predict(img_array)[0]
-    binary_mask = (prediction_mask > 0.5).astype(np.uint8)
-
-    segmented_image = (binary_mask.squeeze() * 255).astype(np.uint8)
-    return segmented_image
-
-
-def overlay_mask(original_image_file_bytes, mask, alpha=0.5):
-    original = np.array(Image.open(io.BytesIO(original_image_file_bytes)).convert("RGB"))
-
-    mask = np.squeeze(mask)
-    mask = cv2.resize(mask.astype(np.uint8), (original.shape[1], original.shape[0]))
-
-    mask = (mask > 0.5).astype(np.uint8)
-
-    overlay = original.copy()
-    overlay[mask == 1] = (alpha * np.array([255, 0, 0]) + (1 - alpha) * overlay[mask == 1]).astype(np.uint8)
-    kernel = np.ones((3, 3), np.uint8)
-
-    border = cv2.dilate(mask, kernel, iterations=1) - mask
-    overlay[border == 1] = [255, 0, 0]
-    return overlay
-#
-#     return value, prediction * 100
+def load_tumor_segmentation_model():
+    return load_model("models/tumor_segmentation_model.h5",
+                      custom_objects={"dice_coef": dice_coef, "Conv2DTranspose": Conv2DTransposeFixed},
+                      compile=False)

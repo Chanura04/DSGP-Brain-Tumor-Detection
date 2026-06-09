@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def contactus():
+def contact_us_page():
     # 1. Page Config (Remove if already set in your main file)
     # st.set_page_config(page_title="Contact Us", page_icon="✉️", layout="wide")
 
