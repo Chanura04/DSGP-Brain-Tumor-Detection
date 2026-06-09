@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def aboutus():
+def about_us_page():
     # 1. Page Config (Note: This must be the very first Streamlit command in your script)
     # If you call this function from a main file that already has set_page_config, remove this line.
     # st.set_page_config(page_title="About Us", page_icon="🧠", layout="wide")
