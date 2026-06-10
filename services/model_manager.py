@@ -6,9 +6,10 @@ from keras.models import load_model
 from torch import nn
 from torchvision import models
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def load_head_detection_model():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     weights = models.ResNet18_Weights.IMAGENET1K_V1
     model = models.resnet18(weights=weights)
     model.fc = torch.nn.Linear(model.fc.in_features, 2)  # top vs other
@@ -78,13 +79,13 @@ def make_model(cfg, classes, device):
 
 def load_mri_tumor_classification_model():
     config = load_config("configs/config.yaml")
-    device = "cuda" if config["device"] == "cuda" and torch.cuda.is_available() else "cpu"
+    # device = "cuda" if config["device"] == "cuda" and torch.cuda.is_available() else "cpu"
     classes = ['glioma', 'meningioma', 'pituitary']
     mri_tumor_classification_model = make_model(config, classes, device)
     checkpoint = torch.load("models/mri_tumor_classification_model.pth", map_location=device, weights_only=False)
     mri_tumor_classification_model.load_state_dict(checkpoint["model_state_dict"])
 
-    return mri_tumor_classification_model, classes, device
+    return mri_tumor_classification_model, classes
 
 
 def dice_coef(y_true, y_pred, smooth=1):

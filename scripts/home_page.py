@@ -6,8 +6,6 @@ from pydantic import ValidationError
 
 from services.database_manager import save_radiologist_data, generate_feedback_id, save_text_report
 from services.input_validator import RadiologistReportValidator
-from services.model_manager import load_head_detection_model, load_ct_tumor_detection_model, \
-    load_mri_tumor_classification_model, load_tumor_segmentation_model
 from services.inference_engine import detect_head, detect_tumor, classify_tumor, segment_tumor, mask_overlay
 from src.utils.image_utils import is_too_black, is_too_white, IMAGE_DISPLAY_SIZE
 from src.utils.utils_config import VALID_IMAGE_EXTENSIONS
@@ -216,28 +214,8 @@ def download_report():
         )
 
 
-def home_page():
-    @st.cache_resource
-    def head_detection():
-        return load_head_detection_model()
-
-    @st.cache_resource
-    def ct_tumor_detection():
-        return load_ct_tumor_detection_model()
-
-    @st.cache_resource
-    def mri_tumor_classification():
-        return load_mri_tumor_classification_model()
-
-    @st.cache_resource
-    def tumor_segmentation():
-        return load_tumor_segmentation_model()
-
-    head_detection_model, index, device = head_detection()
-    ct_tumor_detection_model = ct_tumor_detection()
-    mri_tumor_classification_model, classes, device = mri_tumor_classification()
-    tumor_segmentation_model = tumor_segmentation()
-
+def home_page(head_detection_model, index, ct_tumor_detection_model, mri_tumor_classification_model, classes,
+                  tumor_segmentation_model, device):
     col1, col2 = st.columns(2, gap="large")
 
     ct_image, ct_file_bytes = ct_portal(col1)

@@ -8,6 +8,9 @@ from home_page import home_page
 from login_signup import login_router
 from profile_page import profile_page
 
+from services.model_manager import load_head_detection_model, load_ct_tumor_detection_model, \
+    load_mri_tumor_classification_model, load_tumor_segmentation_model
+
 BASE_DIR = Path(__file__).parent.resolve()
 ABS_DIR = BASE_DIR / "assets"
 
@@ -47,6 +50,27 @@ def navbar():
 
 
 def main_app():
+    @st.cache_resource
+    def head_detection():
+        return load_head_detection_model()
+
+    @st.cache_resource
+    def ct_tumor_detection():
+        return load_ct_tumor_detection_model()
+
+    @st.cache_resource
+    def mri_tumor_classification():
+        return load_mri_tumor_classification_model()
+
+    @st.cache_resource
+    def tumor_segmentation():
+        return load_tumor_segmentation_model()
+
+    head_detection_model, index, device = head_detection()
+    ct_tumor_detection_model = ct_tumor_detection()
+    mri_tumor_classification_model, classes = mri_tumor_classification()
+    tumor_segmentation_model = tumor_segmentation()
+
     st.set_page_config(page_title="Tumor Detection", layout="wide")
 
     st.markdown(f"<style>{load_css('style.css')}</style>", unsafe_allow_html=True)
@@ -88,7 +112,8 @@ def main_app():
 
     # ROUTING
     if st.session_state.page == "home":
-        home_page()
+        home_page(head_detection_model, index, ct_tumor_detection_model, mri_tumor_classification_model, classes,
+                  tumor_segmentation_model, device)
     elif st.session_state.page == "about":
         about_us_page()
     elif st.session_state.page == "contact":
